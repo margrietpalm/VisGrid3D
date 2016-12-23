@@ -6,12 +6,12 @@
 - Numpy
 - Matplotlib
 - VTK Python bindings
-- im2movie script (link)
+- [im2movie](https://github.com/margrietpalm/im2movie)
 
 ### Set up as command line program
 1. Make script executable:
     ```chmod +x visualizer.py```
-2. Create a link to `visualizer` in a folder in your `PATH`. For example, when you have a `bin` folder in your home
+2. Create a link to `visualizer.py` in a folder in your `PATH`. For example, when you have a `bin` folder in your home
  that is in your `PATH`: `ln -s /path/to/VisGrid3D/visualizer.py /home/USERNAME/bin/visgrid3D`
 3. Now you can run the script with `visgrid3D`
 
@@ -42,25 +42,25 @@ to animate (`-t`). All other command line arguments are optimal and use defaults
 
 - Plot cell types 0 and 2 for results in `morphesu/3d_migration_138/`:
 
-```animate_morpheus_3D -i morpheus/3d_migration_138/ -t 0 2```
+```visgrid3D -i morpheus/3d_migration_138/ -t 0 2```
 
 - Colors and opacity can be defined per cell type:
 
-```animate_morpheus_3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1```
+```visgrid3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1```
 
 - Static (frozen) cell types can be defined such that they are only rendered once:
 
-```animate_morpheus_3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2```
+```visgrid3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2```
 
 - Save snapshots and make movie
 
-```animate_morpheus_3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2 -s -m```
+```visgrid3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2 -s -m```
 
 
 ### Help
 
 ```
-$ animate_morpheus_3D -h
+visgrid3D -h
 usage: animate_morpheus_3D [-h] -i SIMDIR [-w WINSIZE WINSIZE] -t
                            [CELLTYPES [CELLTYPES ...]]
                            [-c [COLORS [COLORS ...]]] [-a [ALPHA [ALPHA ...]]]
