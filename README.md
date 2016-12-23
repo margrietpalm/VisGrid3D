@@ -3,9 +3,10 @@
 ## Installation
 
 ### Dependencies
-- Numpy
-- Matplotlib
-- VTK Python bindings
+- [Python 2.7](https://www.python.org/download/releases/2.7/)
+- [Numpy](http://www.numpy.org/)
+- [Matplotlib](http://matplotlib.org/)
+- [VTK with Python bindings](http://www.vtk.org/)
 - [im2movie](https://github.com/margrietpalm/im2movie)
 
 ### Set up as command line program
