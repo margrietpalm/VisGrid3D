@@ -7,7 +7,7 @@
 - [Numpy](http://www.numpy.org/)
 - [Matplotlib](http://matplotlib.org/)
 - [VTK with Python bindings](http://www.vtk.org/)
-- [im2movie](https://github.com/margrietpalm/im2movie)
+- [im2movie](https://github.com/margrietpalm/im2movie) installed as library in the python path
 
 ### Set up as command line program
 1. Make script executable:
