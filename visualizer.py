@@ -55,16 +55,19 @@ class vtkTimerCallback():
 
 
 class Visualizer3D():
+    """ Create visualizer object
+
+
+    :param simdir: path to folder containing vtk files
+    :param steps: steps to visualize
+    :param winsize: window size
+    :param bg: background color
+    :param bbox_color: bounding box wire frame color
+    :param cam_props: dictionary with camera settings
+    """
+
     def __init__(self, simdir, steps=None, winsize=(800, 800), bg=(0, 0, 0), bbox_color=(1, 1, 1),
                  cam_props=None):
-        """
-        :param simdir: path to folder containing vtk files
-        :param steps: steps to visualize
-        :param winsize: window size
-        :param bg: background color
-        :param bbox_color: bounding box wire frame color
-        :param cam_props: dictionary with camera settings
-        """
         self.bbox_color = bbox_color
         self.cam_props = cam_props
         # read data
@@ -205,15 +208,13 @@ class Visualizer3D():
 
         :param step: step to visualize
         :param tau_list: list of cell types
-        :param show: initialize and start the render window after adding the actors to the renderer,
-        should not be used for animations
+        :param show: initialize and start the render window after adding the actors to the renderer, should not be used for animations
         :param save: save view to png
         :param impath: path to store image
         :param imprefix: image prefix
         :param bbox: show bounding box
         :param tau_alpha: list with opacity per cell type
         :param tau_colors: list with color per cell type
-        :return:
         """
         self.renderWindow.SetWindowName('step ' + str(int(step)))
         actors = self.get_actors(step, tau_list, tau_colors, tau_alpha, bbox=bbox)
@@ -254,7 +255,6 @@ class Visualizer3D():
         :param imprefix: image prefix
         :param fps: frames per second
         :param static_tau: static cell types that should not be updated during the animation
-        :return:
         """
         if (tau_colors is None) or (len(tau_colors) is not len(tau)):
             tau_colors = [(.5, .5, .5) for t in tau]

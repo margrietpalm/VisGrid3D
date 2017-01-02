@@ -17,8 +17,7 @@
 3. Now you can run the script with `visgrid3D`
 
 ### Python library
-1. Install dependencies (see above)
-2. Place `VisGrid3D` folder in the python path
+Place `VisGrid3D` folder in the python path. Have a look 
 
 
 ## Generating VTK files in Morpheus
