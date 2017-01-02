@@ -30,11 +30,12 @@ __maintainer__ = "Margriet Palm"
 
 # the vtkTimerCallback takes care of updating the visualzation
 class vtkTimerCallback():
-    def __init__(self, update_func, tmax=1):
+    def __init__(self, update_func, tmax=1, save=False):
         self.timer_count = 0
         self.update = update_func
         self.tmax = tmax
         self.update_actors = None
+        self.save = save
 
     def execute(self, obj, event):
         iren = obj
@@ -49,7 +50,7 @@ class vtkTimerCallback():
             t = self.timer_count % self.tmax
             self.save = False
         # get new actors
-        actors = self.update(t)
+        actors = self.update(t, self.save)
         self.update_actors = actors
         self.timer_count += 1
 
@@ -271,9 +272,9 @@ class Visualizer3D():
         update_tau = [t for t in tau if t not in static_tau]
         update_colors = [tau_colors[i] for i, t in enumerate(tau) if t in update_tau]
         update_alpha = [tau_alpha[i] for i, t in enumerate(tau) if t in update_tau]
-        update_func = lambda t: self.visualize(t, update_tau, show=False, save=save, bbox=False,
+        update_func = lambda t, s: self.visualize(t, update_tau, show=False, save=s, bbox=False,
                                                tau_alpha=update_alpha, tau_colors=update_colors)
-        cb = vtkTimerCallback(update_func, len(steps))
+        cb = vtkTimerCallback(update_func, len(steps), save)
         cb.update_actors = [actors[0]]
         self.renderWindowInteractor.AddObserver('TimerEvent', cb.execute)
         timerId = self.renderWindowInteractor.CreateRepeatingTimer(int(1000 / float(fps)))
