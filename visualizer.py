@@ -79,19 +79,21 @@ class Visualizer3D():
         else:
             self.files = {get_num(f) : f for f in glob.glob('{}/plot_*.vtk'.format(simdir))}
         if not onthefly:
-            self.data = {get_num(f): self._get_data(f) for f in self.files}
+            self.data = {get_num(f): self._load_data(f) for f in self.files}
         else:
-            self.data = {get_num(self.files[0]) : self._get_data(self.files[0])}
+            self.data = {get_num(self.files[0]) : self._load_data(self.files[0])}
         # setup renderer
         self._set_renderer(winsize, bg)
 
     def _get_step(self,step):
+        """ Retrieve vtk data for a specific step """
         if step in self.data:
             return self.data[step]
         else:
-            return self._get_data(self.files[step])
+            return self._load_data(self.files[step])
 
     def _set_renderer(self, winsize, bg):
+        """ Set up vtk renderer """
         self.renderer = vtk.vtkRenderer()
         self.renderer.SetBackground(bg[0], bg[1], bg[2])
         self.renderWindow = vtk.vtkRenderWindow()
@@ -154,6 +156,7 @@ class Visualizer3D():
         self.renderer.SetActiveCamera(cam)
 
     def _get_box_actor(self):
+        """ Create and return actor for wire frame box of the simulation domain """
         (w, h, d) = self.data[self.data.keys()[0]].GetDimensions()
         imageData = vtk.vtkImageData()
         imageData.SetDimensions(2, 2, 2)
@@ -168,6 +171,7 @@ class Visualizer3D():
         return actor
 
     def _get_actor_for_tau(self, step, show_tau, color=(0.5, 0.5, 0.5), opacity=1):
+        """ Create actor for a cell type """
         if isinstance(color, basestring):
             # convert color to rgb string
             if color in colors.cnames:
@@ -205,7 +209,7 @@ class Visualizer3D():
         actor.SetMapper(mapper)
         return actor
 
-    def _get_data(self, fn):
+    def _load_data(self, fn):
         """ Load vtk files """
         # load data
         reader = vtk.vtkStructuredPointsReader()
@@ -296,6 +300,7 @@ class Visualizer3D():
 
 
 def get_color(name):
+    """ Get color for matplotlib color name """
     cc = colors.ColorConverter()
     if name in colors.cnames:
         return cc.to_rgb(name)
