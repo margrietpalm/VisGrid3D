@@ -79,9 +79,9 @@ class Visualizer3D():
         else:
             self.files = {get_num(f) : f for f in glob.glob('{}/plot_*.vtk'.format(simdir))}
         if not onthefly:
-            self.data = {get_num(f): self._load_data(f) for f in self.files}
+            self.data = {n : self._load_data(f) for n,f in self.files.iteritems()}
         else:
-            self.data = {get_num(self.files[0]) : self._load_data(self.files[0])}
+            self.data = {self.files.keys()[0] : self._load_data(self.files[self.files.keys()[0]])}
         # setup renderer
         self._set_renderer(winsize, bg)
 
@@ -111,6 +111,8 @@ class Visualizer3D():
         :param tau_colors: list with color per cell type
         :param tau_alpha: list with opacity per cell type
         :param bbox: show bounding box
+
+        :returns: list of actors with first the actors for tau_list followed by the bounding box (if applicable)
         """
         # set default colors and opacity when they are not specified
         if tau_colors is None:
@@ -211,7 +213,6 @@ class Visualizer3D():
 
     def _load_data(self, fn):
         """ Load vtk files """
-        # load data
         reader = vtk.vtkStructuredPointsReader()
         reader.SetFileName(fn)
         reader.ReadAllScalarsOn()
@@ -254,7 +255,7 @@ class Visualizer3D():
             if impath is None:
                 impath = '.'
             writer.SetFileName('{}/{}{:03d}.png'.format(impath, imprefix, step))
-            print '{}/{}{:03d}.png'.format(impath, imprefix, step)
+            print 'save image {}/{}{:03d}.png'.format(impath, imprefix, step)
             writer.Write()
         return actors
 
@@ -284,14 +285,14 @@ class Visualizer3D():
         actors = self.visualize(0, tau, show=False, save=False, bbox=True, tau_alpha=tau_alpha,
                                 tau_colors=tau_colors)
         if static_tau is None:
-            static_tau = tau
+            static_tau = []
         update_tau = [t for t in tau if t not in static_tau]
         update_colors = [tau_colors[i] for i, t in enumerate(tau) if t in update_tau]
         update_alpha = [tau_alpha[i] for i, t in enumerate(tau) if t in update_tau]
         update_func = lambda t, s: self.visualize(t, update_tau, show=False, save=s, bbox=False,
-                                               tau_alpha=update_alpha, tau_colors=update_colors)
+                                               tau_alpha=update_alpha, tau_colors=update_colors, imprefix=imprefix)
         cb = vtkTimerCallback(update_func, len(steps), save)
-        cb.update_actors = [actors[0]]
+        cb.update_actors = [actors[tau.index(t)] for t in tau if t not in static_tau]
         self.renderWindowInteractor.AddObserver('TimerEvent', cb.execute)
         timerId = self.renderWindowInteractor.CreateRepeatingTimer(int(1000 / float(fps)))
         cb.timerId = timerId
@@ -338,7 +339,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-
     # check if there is something to animate
     if not os.path.isdir(args.simdir):
         sys.exit("Could not find {}".format(args.simdir))
