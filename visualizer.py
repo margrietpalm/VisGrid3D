@@ -206,6 +206,7 @@ class Visualizer3D():
         return actor
 
     def _get_data(self, fn):
+        """ Load vtk files """
         # load data
         reader = vtk.vtkStructuredPointsReader()
         reader.SetFileName(fn)
