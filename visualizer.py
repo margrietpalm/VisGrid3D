@@ -217,7 +217,6 @@ class Visualizer3D():
         return actor
 
     def _load_data(self, fn):
-        print 'read '+fn
         """ Load vtk files """
         reader = vtk.vtkStructuredPointsReader()
         reader.SetFileName(fn)
@@ -336,7 +335,7 @@ def parse_args():
     parser.add_argument("-p", "--imprefix", type=str, help="image prefix")
     parser.add_argument("-s", "--saveim", action="store_true", help="save images")
     parser.add_argument("-m", "--movie", action="store_true", help="make movie after closing the visualization window")
-    parser.add_argument("--readall", action="store_true", help="read all data at once")
+    parser.add_argument("--readall", action="store_true", help="read all data at once before the visualization starts")
     parser.add_argument("--savemem", action="store_true", help="reread vtk file every time it is used instead of "
                                                                "keeping it in memory")
     parser.add_argument("--win", action="store_true", help="make movie windows compatible")

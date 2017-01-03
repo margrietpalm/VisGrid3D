@@ -105,7 +105,9 @@ optional arguments:
                         image prefix
   -s, --saveim          save images
   -m, --movie           make movie
-  -j, --readonthefly    read vtk files on the fly (instead of all at once)  
+  --readall             read all data at once before the visualization starts
+  --savemem             reread vtk file every time it is used instead of
+                        keeping it in memory  
   --win                 make movie windows compatible
   --mp4                 make mp4 movie
 ```
