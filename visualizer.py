@@ -69,9 +69,10 @@ class Visualizer3D():
     """
 
     def __init__(self, simdir, steps=None, winsize=(800, 800), bg=(0, 0, 0), bbox_color=(1, 1, 1),
-                 cam_props=None, onthefly=False):
+                 cam_props=None, onthefly=False, storeafterread=True):
         self.bbox_color = bbox_color
         self.cam_props = cam_props
+        self.storeafterread = storeafterread
         # read data
         get_num = lambda fn: int(fn.split('_')[-1].replace('.vtk', ''))
         if steps is not None:
@@ -90,7 +91,11 @@ class Visualizer3D():
         if step in self.data:
             return self.data[step]
         else:
-            return self._load_data(self.files[step])
+            if self.storeafterread:
+                self.data[step] = self._load_data(self.files[step])
+                return self.data[step]
+            else:
+                return self._load_data(self.files[step])
 
     def _set_renderer(self, winsize, bg):
         """ Set up vtk renderer """
@@ -120,7 +125,8 @@ class Visualizer3D():
         if tau_alpha is None:
             tau_alpha = [1 for tau in tau_list]
         # get actors
-        actors = [self._get_actor_for_tau(step, tau, tau_colors[i], tau_alpha[i]) for i, tau in enumerate(tau_list)]
+        stepdata = self._get_step(step)
+        actors = [self._get_actor_for_tau(stepdata, tau, tau_colors[i], tau_alpha[i]) for i, tau in enumerate(tau_list)]
         # get bounding box wire frame
         if bbox:
             actors.append(self._get_box_actor())
@@ -172,7 +178,7 @@ class Visualizer3D():
         actor.GetProperty().SetRepresentationToWireframe()
         return actor
 
-    def _get_actor_for_tau(self, step, show_tau, color=(0.5, 0.5, 0.5), opacity=1):
+    def _get_actor_for_tau(self, stepdata, show_tau, color=(0.5, 0.5, 0.5), opacity=1):
         """ Create actor for a cell type """
         if isinstance(color, basestring):
             # convert color to rgb string
@@ -180,7 +186,6 @@ class Visualizer3D():
                 color = get_color(color)
             else:
                 color = (0.5, 0.5, 0.5)
-        stepdata = self._get_step(step)
         dim = stepdata.GetDimensions()
         sigma = VN.vtk_to_numpy(stepdata.GetPointData().GetArray('cell.id'))
         sigma = sigma.reshape(dim, order='F')
@@ -212,6 +217,7 @@ class Visualizer3D():
         return actor
 
     def _load_data(self, fn):
+        print 'read '+fn
         """ Load vtk files """
         reader = vtk.vtkStructuredPointsReader()
         reader.SetFileName(fn)
@@ -330,8 +336,9 @@ def parse_args():
     parser.add_argument("-p", "--imprefix", type=str, help="image prefix")
     parser.add_argument("-s", "--saveim", action="store_true", help="save images")
     parser.add_argument("-m", "--movie", action="store_true", help="make movie after closing the visualization window")
-    parser.add_argument("-j", "--readonthefly", action="store_true", help="read vtk files on the fly "
-                                                                          "(instead of all at once)")
+    parser.add_argument("--readall", action="store_true", help="read all data at once")
+    parser.add_argument("--savemem", action="store_true", help="reread vtk file every time it is used instead of "
+                                                               "keeping it in memory")
     parser.add_argument("--win", action="store_true", help="make movie windows compatible")
     parser.add_argument("--mp4", action="store_true", help="make mp4 movie")
     return parser.parse_args()
@@ -381,7 +388,7 @@ def main():
     cam_props = {'position': args.camposition, 'focal point': args.camfocus}
     # create visualizer
     v = Visualizer3D(args.simdir, winsize=args.winsize, bg=args.bgcolor, bbox_color=args.bboxcolor,
-                     cam_props=cam_props, onthefly=args.readonthefly)
+                     cam_props=cam_props, onthefly=(not args.readall), storeafterread=(not args.savemem))
     # start animation
     v.animate(args.celltypes, tau_colors=args.colors, tau_alpha=args.alpha, steps=args.steps,
               save=args.saveim, impath=args.outdir, imprefix=args.imprefix, fps=args.fps, static_tau=args.static)
