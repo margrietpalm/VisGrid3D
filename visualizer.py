@@ -387,7 +387,7 @@ def main():
               save=args.saveim, impath=args.outdir, imprefix=args.imprefix, fps=args.fps, static_tau=args.static)
     # create and store movie
     if args.movie and found_im2movie:
-        makeMovie(args.imprefix, '.png', args.imprefix, args.outdir, args.outdir, args.fps,
+        makeMovie(args.imprefix, 'png', args.imprefix, args.outdir, args.outdir, args.fps,
                   win=args.win, tomp4=args.mp4)
     elif not found_im2movie:
         print "WARNING: Movie generation is turned of because im2movie was not found"
