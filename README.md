@@ -52,7 +52,7 @@ to animate (`-t`). All other command line arguments are optimal and use defaults
 
 ```visgrid3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2```
 
-- Save snapshots and make movie
+- Save snapshots and make movie from those snapshots when the visualization windows is closed
 
 ```visgrid3D -i morpheus/3d_migration_138/ -t 0 2 -c red grey -a 1 0.1 --static 2 -s -m```
 

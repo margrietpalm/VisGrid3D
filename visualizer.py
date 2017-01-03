@@ -329,7 +329,7 @@ def parse_args():
     parser.add_argument("-o", "--outdir", type=str, help="output directory")
     parser.add_argument("-p", "--imprefix", type=str, help="image prefix")
     parser.add_argument("-s", "--saveim", action="store_true", help="save images")
-    parser.add_argument("-m", "--movie", action="store_true", help="make movie")
+    parser.add_argument("-m", "--movie", action="store_true", help="make movie after closing the visualization window")
     parser.add_argument("-j", "--readonthefly", action="store_true", help="read vtk files on the fly "
                                                                           "(instead of all at once)")
     parser.add_argument("--win", action="store_true", help="make movie windows compatible")
