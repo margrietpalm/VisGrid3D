@@ -105,6 +105,7 @@ optional arguments:
                         image prefix
   -s, --saveim          save images
   -m, --movie           make movie
+  -j, --readonthefly    read vtk files on the fly (instead of all at once)  
   --win                 make movie windows compatible
   --mp4                 make mp4 movie
 ```
