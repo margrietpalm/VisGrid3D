@@ -171,7 +171,10 @@ class Visualizer3D():
         imageData.SetSpacing(w, h, d)
         imageData.SetOrigin(0, 0, 0)
         mapper = vtk.vtkDataSetMapper()
-        mapper.SetInputData(imageData)
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            mapper.SetInput(imageData)
+        else:
+            mapper.SetInputData(imageData)
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         actor.GetProperty().SetColor(self.bbox_color[0], self.bbox_color[1], self.bbox_color[2])
@@ -204,7 +207,10 @@ class Visualizer3D():
         sources = vtk.vtkCubeSource()
         sources.Update()
         glyph = vtk.vtkGlyph3D()
-        glyph.SetInputData(polydata)
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            glyph.SetInput(polydata)
+        else:
+            glyph.SetInputData(polydata)
         glyph.SetSourceConnection(sources.GetOutputPort())
         glyph.ScalingOff()
         glyph.Update()
