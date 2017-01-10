@@ -293,14 +293,14 @@ class Visualizer3D():
             steps = self.files.keys()
         steps.sort()
         self.renderWindowInteractor.Initialize()
-        actors = self.visualize(0, tau, show=False, save=False, bbox=True, tau_alpha=tau_alpha,
+        actors = self.visualize(steps[0], tau, show=False, save=False, bbox=True, tau_alpha=tau_alpha,
                                 tau_colors=tau_colors)
         if static_tau is None:
             static_tau = []
         update_tau = [t for t in tau if t not in static_tau]
         update_colors = [tau_colors[i] for i, t in enumerate(tau) if t in update_tau]
         update_alpha = [tau_alpha[i] for i, t in enumerate(tau) if t in update_tau]
-        update_func = lambda t, s: self.visualize(t, update_tau, show=False, save=s, bbox=False,
+        update_func = lambda t, s: self.visualize(steps[t], update_tau, show=False, save=s, bbox=False,
                                                tau_alpha=update_alpha, tau_colors=update_colors, imprefix=imprefix)
         cb = vtkTimerCallback(update_func, len(steps), save)
         cb.update_actors = [actors[tau.index(t)] for t in tau if t not in static_tau]
