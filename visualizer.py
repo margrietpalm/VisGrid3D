@@ -126,14 +126,17 @@ class Visualizer3D():
             tau_alpha = [1 for tau in tau_list]
         # get actors
         stepdata = self._get_step(step)
-        actors = [self._get_actor_for_tau(stepdata, tau, tau_colors[i], tau_alpha[i]) for i, tau in enumerate(tau_list)]
-        # get bounding box wire frame
-        if bbox:
-            actors.append(self._get_box_actor())
-        # add actors to the renderer
-        for actor in actors:
-            self.renderer.AddActor(actor)
-        return actors
+        if stepdata is None:
+            return []
+        else:
+            actors = [self._get_actor_for_tau(stepdata, tau, tau_colors[i], tau_alpha[i]) for i, tau in enumerate(tau_list)]
+            # get bounding box wire frame
+            if bbox:
+                actors.append(self._get_box_actor())
+            # add actors to the renderer
+            for actor in actors:
+                self.renderer.AddActor(actor)
+            return actors
 
     def _modify_cam(self):
         """ Modify the camera settings for the renderer.
@@ -228,6 +231,13 @@ class Visualizer3D():
         reader.SetFileName(fn)
         reader.ReadAllScalarsOn()
         reader.Update()
+        data = reader.GetOutput()
+        if data.GetPointData().HasArray('cell.id') != 1:
+            print "'cell.id' array missing from {} -> skip file".format(fn)
+            return None
+        if data.GetPointData().HasArray('cell.type') != 1:
+            print "'cell.id' array missing from {} -> skip file".format(fn)
+            return None
         return reader.GetOutput()
 
     def visualize(self, step, tau_list, show=False, save=False, impath=None, imprefix=None, bbox=True,
@@ -303,7 +313,10 @@ class Visualizer3D():
         update_func = lambda t, s: self.visualize(steps[t], update_tau, show=False, save=s, bbox=False,
                                                tau_alpha=update_alpha, tau_colors=update_colors, imprefix=imprefix)
         cb = vtkTimerCallback(update_func, len(steps), save)
-        cb.update_actors = [actors[tau.index(t)] for t in tau if t not in static_tau]
+        if len(actors) > 0:
+            cb.update_actors = [actors[tau.index(t)] for t in tau if t not in static_tau]
+        else:
+            cb.update_actors = []
         self.renderWindowInteractor.AddObserver('TimerEvent', cb.execute)
         timerId = self.renderWindowInteractor.CreateRepeatingTimer(int(1000 / float(fps)))
         cb.timerId = timerId
