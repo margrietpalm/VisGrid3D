@@ -258,6 +258,7 @@ class Visualizer3D():
         self.renderWindow.SetWindowName('step ' + str(int(step)))
         actors = self.get_actors(step, tau_list, tau_colors, tau_alpha, bbox=bbox)
         self.renderWindow.Render()
+        print impath
         if self.cam_props is not None:
             self._modify_cam()
         if show:
@@ -310,8 +311,10 @@ class Visualizer3D():
         update_tau = [t for t in tau if t not in static_tau]
         update_colors = [tau_colors[i] for i, t in enumerate(tau) if t in update_tau]
         update_alpha = [tau_alpha[i] for i, t in enumerate(tau) if t in update_tau]
+
         update_func = lambda t, s: self.visualize(steps[t], update_tau, show=False, save=s, bbox=False,
-                                               tau_alpha=update_alpha, tau_colors=update_colors, imprefix=imprefix)
+                                               tau_alpha=update_alpha, tau_colors=update_colors,
+                                                  imprefix=imprefix, impath=impath)
         cb = vtkTimerCallback(update_func, len(steps), save)
         if len(actors) > 0:
             cb.update_actors = [actors[tau.index(t)] for t in tau if t not in static_tau]
@@ -354,6 +357,7 @@ def parse_args():
     parser.add_argument("-p", "--imprefix", type=str, help="image prefix")
     parser.add_argument("-s", "--saveim", action="store_true", help="save images")
     parser.add_argument("-m", "--movie", action="store_true", help="make movie after closing the visualization window")
+    parser.add_argument("--moviedir", type=str, dest="movie directory")
     parser.add_argument("--readall", action="store_true", help="read all data at once before the visualization starts")
     parser.add_argument("--savemem", action="store_true", help="reread vtk file every time it is used instead of "
                                                                "keeping it in memory")
@@ -375,7 +379,7 @@ def main():
         print "Cell color not specified - default to grey"
         args.colors = [get_color("grey") for t in args.celltypes]
     elif len(args.colors) == 1:
-        args.colors = [get_color(args.colors) for t in args.celltypes]
+        args.colors = [get_color(args.colors[0]) for t in args.celltypes]
     elif len(args.colors) < len(args.celltypes):
         print "Number of colors does not match number of cell types - default to grey"
         args.colors = [get_color("grey") for t in args.celltypes]
