@@ -339,7 +339,7 @@ def get_color(name):
 def parse_args():
     parser = argparse.ArgumentParser()
     # parser.description("Animate 3D Morpheus simulations")
-    parser.add_argument("-i", "--simdir", type=str, default="./", help="Simulation folder", required=True)
+    parser.add_argument("-i", "--simdir", type=str, default="./", help="Simulation folder")
     parser.add_argument("-w", "--winsize", type=int, nargs=2, help="window size", default=(800, 800))
     parser.add_argument("-t", "--celltypes", type=int, nargs="*", help="cell types to animate", required=True)
     parser.add_argument("-c", "--colors", type=str, nargs="*", help="colors or the cell types")
@@ -357,7 +357,8 @@ def parse_args():
     parser.add_argument("-p", "--imprefix", type=str, help="image prefix")
     parser.add_argument("-s", "--saveim", action="store_true", help="save images")
     parser.add_argument("-m", "--movie", action="store_true", help="make movie after closing the visualization window")
-    parser.add_argument("--moviedir", type=str, dest="movie directory")
+    parser.add_argument("--moviedir", type=str, help="movie directory")
+    parser.add_argument("--moviename", type=str, help="movie name")
     parser.add_argument("--readall", action="store_true", help="read all data at once before the visualization starts")
     parser.add_argument("--savemem", action="store_true", help="reread vtk file every time it is used instead of "
                                                                "keeping it in memory")
@@ -416,7 +417,11 @@ def main():
               save=args.saveim, impath=args.outdir, imprefix=args.imprefix, fps=args.fps, static_tau=args.static)
     # create and store movie
     if args.movie and found_im2movie:
-        makeMovie(args.imprefix, 'png', args.imprefix, args.outdir, args.outdir, args.fps,
+        if args.moviedir is None:
+            args.moviedir = args.outdir
+        if args.moviename is None:
+            args.moviename = args.imprefix
+        makeMovie(args.imprefix, 'png', args.moviename, args.outdir, args.moviedir, args.fps,
                   win=args.win, tomp4=args.mp4)
     elif not found_im2movie:
         print "WARNING: Movie generation is turned of because im2movie was not found"
