@@ -158,7 +158,7 @@ class Visualizer3D():
             cam.SetPosition(self.cam_props['position'])
         else:
             cam.SetPosition(old_cam.GetPosition())
-        if 'focal_point' in self.cam_props:
+        if 'focal point' in self.cam_props:
             cam.SetFocalPoint(self.cam_props['focal point'])
         else:
             cam.SetFocalPoint(old_cam.GetFocalPoint())
@@ -350,6 +350,7 @@ def parse_args():
     parser.add_argument("--bgcolor", type=float, nargs=3, default=(0, 0, 0), help="background color")
     parser.add_argument("--camposition", type=float, nargs=3, default=(-200, 200, 200), help="camera position")
     parser.add_argument("--camfocus", type=float, nargs=3, default=(100, 100, 50), help="camera focal point")
+    # parser.add_argument("--campitch", type=float, default=, help="camera pitch")
     parser.add_argument("--steps", type=int, nargs="*", help="steps to animate, all steps will be shown if this "
                                                              "is not specified")
     parser.add_argument("-f", "--fps", type=float, default=5, help="frames per second")
