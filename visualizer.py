@@ -69,10 +69,11 @@ class Visualizer3D():
     """
 
     def __init__(self, simdir, steps=None, winsize=(800, 800), bg=(0, 0, 0), bbox_color=(1, 1, 1),
-                 cam_props=None, onthefly=False, storeafterread=True):
+                 cam_props=None, onthefly=False, storeafterread=True, bnd_colors=None):
         self.bbox_color = bbox_color
         self.cam_props = cam_props
         self.storeafterread = storeafterread
+        self.bnd_colors = bnd_colors
         # read data
         get_num = lambda fn: int(fn.split('_')[-1].replace('.vtk', ''))
         if steps is not None:
@@ -107,7 +108,7 @@ class Visualizer3D():
         self.renderWindowInteractor.SetRenderWindow(self.renderWindow)
         self.renderWindow.SetSize(winsize[0], winsize[1])
 
-    def get_actors(self, step, tau_list, tau_colors=None, tau_alpha=None, bbox=True):
+    def get_actors(self, step, tau_list, tau_colors=None, tau_alpha=None, bbox=True, bnd=None):
         """
         Create actors for a list of cell types and add them to the renderer
 
@@ -133,6 +134,9 @@ class Visualizer3D():
             # get bounding box wire frame
             if bbox:
                 actors.append(self._get_box_actor())
+            if bnd is not None:
+                for tp,color in bnd.iteritems():
+                    actors.append(self._get_bnd_actor(tp,color))
             # add actors to the renderer
             for actor in actors:
                 self.renderer.AddActor(actor)
@@ -165,6 +169,55 @@ class Visualizer3D():
         if 'pitch' in self.cam_props:
             cam.Pitch(self.cam_props['pitch'])
         self.renderer.SetActiveCamera(cam)
+
+
+    def _get_bnd_actor(self,tp,color):
+        print 'add boundary for {} with color {}'.format(tp,color)
+        (w, h, d) = self.data[self.data.keys()[0]].GetDimensions()
+        points = vtk.vtkPoints()
+        f = 0 if '-' in tp else 1
+        if 'x' in tp:
+            points.InsertNextPoint(f*w,0,0)
+            points.InsertNextPoint(f*w,h,0)
+            points.InsertNextPoint(f*w,h,d)
+            points.InsertNextPoint(f*w,0,d)
+        elif 'y' in tp:
+            points.InsertNextPoint(0,f*h,0)
+            points.InsertNextPoint(w,f*h,0)
+            points.InsertNextPoint(w,f*h,d)
+            points.InsertNextPoint(0,f*h,d)
+        elif 'z' in tp:
+            points.InsertNextPoint(0,0,f*d)
+            points.InsertNextPoint(w,0,f*d)
+            points.InsertNextPoint(w,h,f*d)
+            points.InsertNextPoint(0,h,f*d)
+        polygon = vtk.vtkPolygon()
+        polygon.GetPointIds().SetNumberOfIds(4)  # make a quad
+        polygon.GetPointIds().SetId(0, 0)
+        polygon.GetPointIds().SetId(1, 1)
+        polygon.GetPointIds().SetId(2, 2)
+        polygon.GetPointIds().SetId(3, 3)
+        # Add the polygon to a list of polygons
+        polygons = vtk.vtkCellArray()
+        polygons.InsertNextCell(polygon)
+
+        # Create a PolyData
+        polygonPolyData = vtk.vtkPolyData()
+        polygonPolyData.SetPoints(points)
+        polygonPolyData.SetPolys(polygons)
+
+        # Create a mapper and actor
+        mapper = vtk.vtkPolyDataMapper()
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            mapper.SetInput(polygonPolyData)
+        else:
+            mapper.SetInputData(polygonPolyData)
+
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetColor(color[0], color[1], color[2])
+        return actor
+
 
     def _get_box_actor(self):
         """ Create and return actor for wire frame box of the simulation domain """
@@ -241,7 +294,7 @@ class Visualizer3D():
         return reader.GetOutput()
 
     def visualize(self, step, tau_list, show=False, save=False, impath=None, imprefix=None, bbox=True,
-                  tau_alpha=None, tau_colors=None):
+                  tau_alpha=None, tau_colors=None, bnd=None):
         """
         Visualize a given step.
 
@@ -256,9 +309,8 @@ class Visualizer3D():
         :param tau_colors: list with color per cell type
         """
         self.renderWindow.SetWindowName('step ' + str(int(step)))
-        actors = self.get_actors(step, tau_list, tau_colors, tau_alpha, bbox=bbox)
+        actors = self.get_actors(step, tau_list, tau_colors, tau_alpha, bbox=bbox,bnd=bnd)
         self.renderWindow.Render()
-        print impath
         if self.cam_props is not None:
             self._modify_cam()
         if show:
@@ -305,7 +357,7 @@ class Visualizer3D():
         steps.sort()
         self.renderWindowInteractor.Initialize()
         actors = self.visualize(steps[0], tau, show=False, save=False, bbox=True, tau_alpha=tau_alpha,
-                                tau_colors=tau_colors)
+                                tau_colors=tau_colors,bnd=self.bnd_colors)
         if static_tau is None:
             static_tau = []
         update_tau = [t for t in tau if t not in static_tau]
@@ -365,6 +417,12 @@ def parse_args():
                                                                "keeping it in memory")
     parser.add_argument("--win", action="store_true", help="make movie windows compatible")
     parser.add_argument("--mp4", action="store_true", help="make mp4 movie")
+    parser.add_argument("--color_xmin",type=float, nargs=3)
+    parser.add_argument("--color_ymin",type=float, nargs=3)
+    parser.add_argument("--color_zmin",type=float, nargs=3)
+    parser.add_argument("--color_xmax",type=float, nargs=3)
+    parser.add_argument("--color_ymax",type=float, nargs=3)
+    parser.add_argument("--color_zmax",type=float, nargs=3)
     return parser.parse_args()
 
 
@@ -395,6 +453,21 @@ def main():
     elif len(args.alpha) < len(args.celltypes):
         print "Number of alpha values does not match number of cell types - default to opaque objects"
         args.alpha = [1 for t in args.celltypes]
+    bnd = {}
+    if args.color_xmax is not None:
+        bnd['x'] = args.color_xmax
+    if args.color_ymax is not None:
+        bnd['y'] = args.color_ymax
+    if args.color_zmax is not None:
+        bnd['z'] = args.color_zmax
+    if args.color_xmin is not None:
+        bnd['-x'] = args.color_xmin
+    if args.color_ymin is not None:
+        bnd['-y'] = args.color_ymin
+    if args.color_zmin is not None:
+        bnd['-z'] = args.color_zmin
+    if len(bnd) == 0:
+        bnd = {}
 
     # set saving options
     if args.imprefix or args.outdir or args.movie:
@@ -412,7 +485,8 @@ def main():
     cam_props = {'position': args.camposition, 'focal point': args.camfocus}
     # create visualizer
     v = Visualizer3D(args.simdir, winsize=args.winsize, bg=args.bgcolor, bbox_color=args.bboxcolor,
-                     cam_props=cam_props, onthefly=(not args.readall), storeafterread=(not args.savemem))
+                     cam_props=cam_props, onthefly=(not args.readall), storeafterread=(not args.savemem),
+                     bnd_colors=bnd)
     # start animation
     v.animate(args.celltypes, tau_colors=args.colors, tau_alpha=args.alpha, steps=args.steps,
               save=args.saveim, impath=args.outdir, imprefix=args.imprefix, fps=args.fps, static_tau=args.static)
