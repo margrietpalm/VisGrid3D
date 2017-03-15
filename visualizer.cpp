@@ -5,6 +5,7 @@
 #include "visualizer.h"
 #include <sstream>      // std::stringstream
 #include <algorithm>
+#include <vector>
 
 #include <vtkStructuredPoints.h>
 #include <vtkDataSetMapper.h>
@@ -27,7 +28,8 @@ class vtkTimerCallback : public vtkCommand
  public:
   Visualizer * v;
   std::vector<int> taulist;
-  std::map<int, vtkSmartPointer<vtkActor> > update_actors;
+  std::vector<vtkSmartPointer<vtkActor> > update_actors;
+  std::map<int, std::vector < vtkSmartPointer<vtkActor> > > used_actors;
   int tmax;
 
   static vtkTimerCallback *New()
@@ -43,9 +45,21 @@ class vtkTimerCallback : public vtkCommand
     vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::SafeDownCast(caller);
     vtkRenderWindow *win = iren->GetRenderWindow();
     vtkRenderer * ren = win->GetRenderers()->GetFirstRenderer();
-    for (auto item : update_actors)
-      ren->RemoveActor(item.second);
-    update_actors = v->VisualizeStep(TimerCount,taulist);
+    for (auto actor : update_actors){ ren->RemoveActor(actor);}
+    if (used_actors.find(TimerCount) == used_actors.end()) {
+      update_actors = v->VisualizeStep(TimerCount, taulist);
+      used_actors[TimerCount] = update_actors;
+    }
+    else{
+      std::stringstream title;
+      title << "step " << TimerCount;
+      win->SetWindowName(title.str().c_str());
+      for (auto actor : used_actors[TimerCount]){
+        ren->AddActor(actor);
+      }
+      win->Render();
+      update_actors = used_actors[TimerCount];
+    }
     ++this->TimerCount;
   }
 
@@ -111,22 +125,21 @@ vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau){
 
 
 
-std::map<int, vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step, std::vector<int> taulist) {
+std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step, std::vector<int> taulist) {
   return VisualizeStep(step, taulist, false);
 }
 
-std::map<int, vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
+std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
                                                                      bool show){
   std::stringstream title;
   title << "step " << step;
-  std::cout << title.str() << std::endl;
   renderWindow->SetWindowName(title.str().c_str());
-
   stepdata data = reader->GetDataForStep(step);
-  std::map<int, vtkSmartPointer <vtkActor> > actors;
+  std::vector<vtkSmartPointer <vtkActor> > actors;
   for (auto tau : taulist) {
-    actors[tau] = GetActorForType(data, tau);
-    renderer->AddActor(actors[tau]);
+    vtkSmartPointer <vtkActor> actor = GetActorForType(data, tau);
+    renderer->AddActor(actor);
+    actors.push_back(actor);
   }
   renderer->AddActor(GetActerForBBox(data));
 
@@ -140,28 +153,18 @@ std::map<int, vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,st
 
 void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau){
   renderWindowInteractor->Initialize();
-  std::map<int, vtkSmartPointer <vtkActor> > actors = VisualizeStep(steps[0], taulist);
+  VisualizeStep(steps[0], static_tau);
   std::vector<int> update_tau;
-  vtkSmartPointer<vtkTimerCallback> cb =
-      vtkSmartPointer<vtkTimerCallback>::New();
+  vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
   cb->tmax = steps[steps.size()-1];
   cb->v = this;
-  if (static_tau.size() == 0){
-    cb->taulist = taulist;
-    cb->update_actors = actors;
-  }
-  else{
-    for (auto tau : taulist){
-      if (std::find(static_tau.begin(), static_tau.end(), tau) == static_tau.end()){
-        cb->taulist.push_back(tau);
-        cb->update_actors[tau] = actors[tau];
-      }
-    }
+  for (auto tau : taulist) {
+    if (std::find(static_tau.begin(), static_tau.end(), tau) == static_tau.end())
+      cb->taulist.push_back(tau);
   }
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent,cb);
-  int timerId = renderWindowInteractor->CreateRepeatingTimer(1000);
+  int timerId = renderWindowInteractor->CreateRepeatingTimer(100);
   renderWindowInteractor->Start();
-//  timerId = renderWindowInteractor->CreateRepeatingTimer(int(1000 / float(fps)))
 }
 
 

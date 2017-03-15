@@ -29,11 +29,11 @@ std::string DataReader::GetFileNameForStep(int step){
 }
 
 stepdata DataReader::GetDataForStep(int step){
-  if (data.find(step) == data.end()){ ReadData(step); }
-  return data[step];
+//  if (data.find(step) == data.end()){ ReadData(step); }
+  return ReadData(step);
 }
 
-void DataReader::ReadData(int step){
+stepdata DataReader::ReadData(int step){
   reader = vtkSmartPointer<vtkStructuredPointsReader>::New();
   std::string fn = GetFileNameForStep(step);
   reader->SetFileName(fn.c_str());
@@ -41,8 +41,10 @@ void DataReader::ReadData(int step){
   sd.sp = reader->GetOutput();
   sd.sigma = GetArrayFromFile("cell.id");
   sd.tau = GetArrayFromFile("cell.type");
-  data[step] = sd;
+//  data[step] = sd;
+  return sd;
 }
+
 
 
 vtkSmartPointer<vtkDataArray> DataReader::GetArrayFromFile(std::string name){

@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   Visualizer * v = new Visualizer(dr);
   v->InitRenderer();
   std::vector<int> taulist = {1};
-  std::vector<int> steps = {0,1,2,3,4,5,6,7,8,9,10};
+  std::vector<int> steps = {0,1,2,3,4};
   std::vector<int> static_tau = {};
   v->Animate(taulist,steps,static_tau);
 //  v->VisualizeStep(1,taulist);

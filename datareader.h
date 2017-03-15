@@ -22,7 +22,7 @@ class DataReader {
   DataReader();
   DataReader(std::string _basename, std::string _datapath);
   stepdata GetDataForStep(int step);
-  void ReadData(int step);
+  stepdata ReadData(int step);
   std::map<int, stepdata> data;
 
   std::string basename;
