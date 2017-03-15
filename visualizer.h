@@ -16,6 +16,8 @@
 
 #include "datareader.h"
 
+
+
 struct color{ double r,g,b; };
 
 class Visualizer {
@@ -23,6 +25,7 @@ class Visualizer {
   Visualizer();
   Visualizer(DataReader * _reader);
   void InitRenderer();
+  void ModifyCamera();
   void Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist, bool show);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist);
@@ -32,6 +35,9 @@ class Visualizer {
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;
+  double * camposition;
+  double * camfocus;
+  double campitch;
 
  private:
   vtkSmartPointer<vtkActor> GetActorForTau(){};

@@ -18,6 +18,7 @@
 #include <vtkCommand.h>
 #include <vtkProperty.h>
 #include <vtkRendererCollection.h>
+#include <vtkCamera.h>
 
 
 class vtkTimerCallback : public vtkCommand
@@ -72,6 +73,9 @@ Visualizer::Visualizer(DataReader * _reader){
   bbcolor = {1,1,1};
   winsize = {800,800};
   fps = 1;
+  camposition = NULL;
+  camfocus = NULL;
+  campitch = 0;
 }
 
 void Visualizer::InitRenderer(){
@@ -82,6 +86,17 @@ void Visualizer::InitRenderer(){
   renderWindowInteractor->SetRenderWindow(renderWindow);
   renderWindow->SetSize(winsize[0], winsize[1]);
   renderer->SetBackground(bgcolor.r,bgcolor.g,bgcolor.b);
+  vtkSmartPointer<vtkCamera> cam = renderer->GetActiveCamera();
+  if (!camposition){ camposition = cam->GetPosition();}
+  if (!camfocus){ camfocus = cam->GetFocalPoint();}
+}
+
+void Visualizer::ModifyCamera(){
+  vtkSmartPointer<vtkCamera> cam = vtkSmartPointer<vtkCamera>::New();
+  cam->SetPosition(camposition);
+  cam->SetFocalPoint(camfocus);
+  cam->Pitch(campitch);
+  renderer->SetActiveCamera(cam);
 }
 
 vtkSmartPointer<vtkActor> Visualizer::GetActerForBBox(stepdata data){

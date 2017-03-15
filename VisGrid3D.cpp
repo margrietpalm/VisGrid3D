@@ -67,6 +67,9 @@ int main(int argc, char **argv)
   stepdata data = dr->GetDataForStep(1);
   Visualizer * v = new Visualizer(dr);
   v->InitRenderer();
+  double p [3] = {400,400,400};
+  v->camposition = p;
+  v->ModifyCamera();
   std::vector<int> taulist = {1};
   std::vector<int> steps = {0,1,2,3,4};
   std::vector<int> static_tau = {};
