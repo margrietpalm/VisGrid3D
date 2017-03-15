@@ -34,6 +34,7 @@ class Visualizer {
   vtkSmartPointer<vtkActor> GetActorForBBox(){};
   vtkSmartPointer<vtkActor> GetActorForBnd(){};
   vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau);
+  vtkSmartPointer<vtkActor> GetActerForBBox(stepdata data);
   vtkSmartPointer<vtkPoints> GetPointsForTau(stepdata data, int tau);
 
   vtkSmartPointer<vtkRenderer> renderer;

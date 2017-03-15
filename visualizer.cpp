@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include <vtkStructuredPoints.h>
+#include <vtkDataSetMapper.h>
 #include <vtkDataArray.h>
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
@@ -14,6 +15,7 @@
 #include <vtkGlyph3D.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkCommand.h>
+#include <vtkProperty.h>
 #include <vtkRendererCollection.h>
 
 
@@ -64,6 +66,21 @@ void Visualizer::InitRenderer(){
   renderer->SetBackground(bgcolor.r,bgcolor.g,bgcolor.b); // Background color green
 }
 
+vtkSmartPointer<vtkActor> Visualizer::GetActerForBBox(stepdata data){
+  int * dim = data.sp->GetDimensions();
+  vtkSmartPointer<vtkImageData> boxdata = vtkSmartPointer<vtkImageData>::New();
+  boxdata->SetDimensions(2, 2, 2);
+  boxdata->SetSpacing(dim[0], dim[1], dim[2]);
+  boxdata->SetOrigin(0, 0, 0);
+  vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+  mapper->SetInputData(boxdata);
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->GetProperty()->SetColor(1,1,1);
+  actor->GetProperty()->SetRepresentationToWireframe();
+  actor->SetMapper(mapper);
+  return actor;
+}
+
 vtkSmartPointer<vtkPoints> Visualizer::GetPointsForTau(stepdata data, int tau){
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
   for(int i=0;i< (int)data.sp->GetNumberOfPoints(); i++){
@@ -111,6 +128,8 @@ std::map<int, vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,st
     actors[tau] = GetActorForType(data, tau);
     renderer->AddActor(actors[tau]);
   }
+  renderer->AddActor(GetActerForBBox(data));
+
   renderWindow->Render();
   if (show) {
     renderWindowInteractor->Initialize();
