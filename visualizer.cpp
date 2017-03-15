@@ -69,6 +69,9 @@ class vtkTimerCallback : public vtkCommand
 Visualizer::Visualizer(DataReader * _reader){
   reader = _reader;
   bgcolor = {0,0,0};
+  bbcolor = {1,1,1};
+  winsize = {800,800};
+  fps = 1;
 }
 
 void Visualizer::InitRenderer(){
@@ -77,7 +80,8 @@ void Visualizer::InitRenderer(){
   renderWindow->AddRenderer(renderer);
   renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
-  renderer->SetBackground(bgcolor.r,bgcolor.g,bgcolor.b); // Background color green
+  renderWindow->SetSize(winsize[0], winsize[1]);
+  renderer->SetBackground(bgcolor.r,bgcolor.g,bgcolor.b);
 }
 
 vtkSmartPointer<vtkActor> Visualizer::GetActerForBBox(stepdata data){
@@ -89,7 +93,7 @@ vtkSmartPointer<vtkActor> Visualizer::GetActerForBBox(stepdata data){
   vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
   mapper->SetInputData(boxdata);
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-  actor->GetProperty()->SetColor(1,1,1);
+  actor->GetProperty()->SetColor(bbcolor.r,bbcolor.g,bbcolor.b);
   actor->GetProperty()->SetRepresentationToWireframe();
   actor->SetMapper(mapper);
   return actor;
@@ -105,7 +109,12 @@ vtkSmartPointer<vtkPoints> Visualizer::GetPointsForTau(stepdata data, int tau){
   return points;
 }
 
-vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau){
+vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau) {
+  return GetActorForType(data,tau,{0.5,0.5,0.5},1);
+}
+
+
+vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau, color c, double opacity){
   vtkSmartPointer<vtkPoints> points = GetPointsForTau(data,tau);
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
   polydata->SetPoints(points);
@@ -120,24 +129,37 @@ vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau){
   mapper->SetInputConnection(glyph3D->GetOutputPort());
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
+  actor->GetProperty()->SetOpacity(opacity);
+  actor->GetProperty()->SetColor(c.r,c.g,c.b);
   return actor;
 }
 
 
 
 std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step, std::vector<int> taulist) {
-  return VisualizeStep(step, taulist, false);
+  std::vector<double> tau_opacity(taulist.size(),1);
+  std::vector<color> tau_colors(taulist.size(),{.5,.5,.5});
+  return VisualizeStep(step,taulist,false,tau_colors,tau_opacity);
 }
 
 std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
-                                                                     bool show){
+                                                                   bool show){
+  std::vector<double> tau_opacity(taulist.size(),1);
+  std::vector<color> tau_colors(taulist.size(),{.5,.5,.5});
+  return VisualizeStep(step,taulist,show,tau_colors,tau_opacity);
+}
+
+
+std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
+                                                                     bool show,std::vector<color> tau_colors,
+                                                                   std::vector<double> tau_opacity){
   std::stringstream title;
   title << "step " << step;
   renderWindow->SetWindowName(title.str().c_str());
   stepdata data = reader->GetDataForStep(step);
   std::vector<vtkSmartPointer <vtkActor> > actors;
-  for (auto tau : taulist) {
-    vtkSmartPointer <vtkActor> actor = GetActorForType(data, tau);
+  for (int i = 0; i < taulist.size(); i++){
+    vtkSmartPointer <vtkActor> actor = GetActorForType(data, taulist[i], tau_colors[i], tau_opacity[i]);
     renderer->AddActor(actor);
     actors.push_back(actor);
   }
@@ -163,7 +185,8 @@ void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::v
       cb->taulist.push_back(tau);
   }
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent,cb);
-  int timerId = renderWindowInteractor->CreateRepeatingTimer(100);
+  int timerId = renderWindowInteractor->CreateRepeatingTimer((int)(1000 / fps));
+
   renderWindowInteractor->Start();
 }
 
