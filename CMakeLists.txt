@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 PROJECT(VisGrid3D)
 
 set(CMAKE_CXX_STANDARD 11)
-set(SOURCE_FILES VisGrid3D.cpp visualizer.cpp datareader.cpp colormap.h)
+set(SOURCE_FILES src/VisGrid3D.cpp src/visualizer.cpp src/datareader.cpp src/colormap.h)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
