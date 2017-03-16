@@ -75,8 +75,6 @@ Visualizer::Visualizer(DataReader * _reader){
   bbcolor = {1,1,1};
   winsize = {800,800};
   fps = 1;
-  camposition = NULL;
-  camfocus = NULL;
   campitch = 0;
 }
 
@@ -89,11 +87,10 @@ void Visualizer::InitRenderer(){
   renderWindow->SetSize(winsize[0], winsize[1]);
   renderer->SetBackground(bgcolor.r,bgcolor.g,bgcolor.b);
   vtkSmartPointer<vtkCamera> cam = renderer->GetActiveCamera();
-  if (!camposition){ camposition = cam->GetPosition();}
-  if (!camfocus){ camfocus = cam->GetFocalPoint();}
 }
 
 void Visualizer::ModifyCamera(){
+  std::cout << "modify cam\n";
   vtkSmartPointer<vtkCamera> cam = vtkSmartPointer<vtkCamera>::New();
   cam->SetPosition(camposition);
   cam->SetFocalPoint(camfocus);

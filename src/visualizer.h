@@ -35,8 +35,10 @@ class Visualizer {
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;
-  double * camposition;
-  double * camfocus;
+  double camposition [3];
+  double camfocus [3];
+//  double * camposition;
+//  double * camfocus;
   double campitch;
 
  private:

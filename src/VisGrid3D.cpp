@@ -36,6 +36,9 @@ cxxopts::Options GetPars(int argc, char *argv[]){
       ("H,height","visualization height", cxxopts::value<int>()->default_value("800"))
       ("bgcolor","background color", cxxopts::value<std::string>()->default_value("black"))
       ("bboxcolor","bounding box color", cxxopts::value<std::string>()->default_value("white"))
+      ("campos","camera position", cxxopts::value<std::string>())
+      ("camfocus","camera focus", cxxopts::value<std::string>())
+      ("campitch","camera pitch", cxxopts::value<double>())
       ("f,fps","frame rate", cxxopts::value<int>())
       ("showcolors","show available colors", cxxopts::value<bool>());
 
@@ -127,43 +130,53 @@ int main(int argc, char *argv[])
     for (auto t : types){alpha.push_back(1);}
   }
 
-  // various visualization settings
-  int winwidth = 800;
-  if (opt.count("width")){winwidth=opt["width"].as<int>();}
-  int winheight = 800;
-  if (opt.count("height")){winheight=opt["height"].as<int>();}
-  double fps = 1;
-  if (opt.count("fps")){fps=opt["fps"].as<double>();}
-  color bgcolor = {0,0,0};
+  // initialize visualization
+  Visualizer * vis = new Visualizer(dr);
+  if (opt.count("width")){vis->winsize[0] =opt["width"].as<int>();}
+  if (opt.count("height")){vis->winsize[1]=opt["height"].as<int>();}
   if (opt.count("bgcolor")){
     std::vector<std::string> v = SplitString(opt["bgcolor"].as<std::string>());
     if (v.size() == 3)
-      bgcolor = {stod(v[0]),stod(v[1]),stod(v[2])};
+      vis->bgcolor = {stod(v[0]),stod(v[1]),stod(v[2])};
   }
   color bboxcolor = {1,1,1};
   if (opt.count("bboxcolor")){
     std::vector<std::string> v = SplitString(opt["bboxcolor"].as<std::string>());
     if (v.size() == 3)
-      bboxcolor = {stod(v[0]),stod(v[1]),stod(v[2])};
+      vis->bbcolor = {stod(v[0]),stod(v[1]),stod(v[2])};
   }
+  if (opt.count("fps")){vis->fps=opt["fps"].as<double>();}
+  vis->InitRenderer();
 
-  Visualizer * v = new Visualizer(dr);
-  v->winsize[0] = winwidth;
-  v->winsize[1] = winheight;
-  v->bbcolor = bboxcolor;
-  v->bgcolor = bgcolor;
-  v->InitRenderer();
-  v->fps = fps;
-  double p [3] = {200,200,600};
-  v->camposition = p;
-  double f [3] = {100,100,0};
-  v->camfocus = f;
-  v->ModifyCamera();
-  steps = {0,1,2};
-  v->Animate(types,steps,stattypes,colors,alpha);
+//   set up camera
+  bool modcam = false;
+  if (opt.count("campos")){
+    modcam = true;
+    std::vector<std::string> v = SplitString(opt["campos"].as<std::string>());
+    if (v.size() == 3) {
+      for (int i = 0; i < 3; i++) {
+        vis->camposition[i] = stoi(v[i]);
+      }
+    }
+  }
+  std::cout << "pos set\n";
+  if (opt.count("camfocus")){
+    modcam = true;
+    std::vector<std::string> v = SplitString(opt["camfocus"].as<std::string>());
+    if (v.size() == 3) {
+      for (int i = 0; i < 3; i++) {
+        vis->camfocus[i] = stoi(v[i]);
+      }
+    }
+  }
+  if (opt.count("campitch")){
+    modcam = true;
+    vis->campitch = opt["campitch"].as<double>();
+  }
+  if (modcam){ vis->ModifyCamera(); }
 
-
-
+  // run animation
+  vis->Animate(types,steps,stattypes,colors,alpha);
 
   return EXIT_SUCCESS;
 }
