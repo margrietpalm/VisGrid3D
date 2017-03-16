@@ -7,12 +7,9 @@ set(SOURCE_FILES VisGrid3D.cpp visualizer.cpp datareader.cpp)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
-FIND_PACKAGE(Boost COMPONENTS program_options REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-
 add_executable(VisGrid3D ${SOURCE_FILES})
 
-TARGET_LINK_LIBRARIES(VisGrid3D ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(VisGrid3D)
 
 
 
