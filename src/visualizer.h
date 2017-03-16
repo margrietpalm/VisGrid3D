@@ -26,20 +26,19 @@ class Visualizer {
   void InitRenderer();
   void ModifyCamera();
   void Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
-               std::vector<color> colors, std::vector<double> opacity);
-  std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist, bool show);
-  std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist);
+               std::vector<color> colors, std::vector<double> opacity, bool save);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step,std::vector<int> taulist,
                                                          bool show,std::vector<color> tau_colors,
-                                                         std::vector<double> tau_opacity);
+                                                         std::vector<double> tau_opacity, bool save);
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;
   double camposition [3];
   double camfocus [3];
-//  double * camposition;
-//  double * camfocus;
   double campitch;
+  int numlen;
+  std::string prefix;
+  std::string impath;
 
  private:
   vtkSmartPointer<vtkActor> GetActorForTau(){};
@@ -49,6 +48,7 @@ class Visualizer {
   vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau);
   vtkSmartPointer<vtkActor> GetActerForBBox(stepdata data);
   vtkSmartPointer<vtkPoints> GetPointsForTau(stepdata data, int tau);
+  std::string GetImNameForStep(int step);
 
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkRenderWindow> renderWindow;

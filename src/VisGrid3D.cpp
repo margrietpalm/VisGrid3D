@@ -40,6 +40,9 @@ cxxopts::Options GetPars(int argc, char *argv[]){
       ("camfocus","camera focus", cxxopts::value<std::string>())
       ("campitch","camera pitch", cxxopts::value<double>())
       ("f,fps","frame rate", cxxopts::value<int>())
+      ("o,outdir", "Folder to write images to", cxxopts::value<std::string>())
+      ("s,save", "Save images", cxxopts::value<bool>())
+      ("prefix", "Prefix for image names", cxxopts::value<std::string>())
       ("showcolors","show available colors", cxxopts::value<bool>());
 
 
@@ -159,7 +162,6 @@ int main(int argc, char *argv[])
       }
     }
   }
-  std::cout << "pos set\n";
   if (opt.count("camfocus")){
     modcam = true;
     std::vector<std::string> v = SplitString(opt["camfocus"].as<std::string>());
@@ -175,8 +177,15 @@ int main(int argc, char *argv[])
   }
   if (modcam){ vis->ModifyCamera(); }
 
+  // set saving options
+  bool save = false;
+  if (opt.count("save") | opt.count("outdir")){ save = true;}
+  if (opt.count("outdir")){ vis->impath = opt["outdir"].as<std::string>();}
+  if (opt.count("prefix")){ vis->prefix = opt["prefix"].as<std::string>();}
+  if (save){ vis->numlen = std::to_string(steps[steps.size()-1]).size(); }
+  
   // run animation
-  vis->Animate(types,steps,stattypes,colors,alpha);
+  vis->Animate(types,steps,stattypes,colors,alpha,save);
 
   return EXIT_SUCCESS;
 }

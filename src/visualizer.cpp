@@ -19,7 +19,8 @@
 #include <vtkProperty.h>
 #include <vtkRendererCollection.h>
 #include <vtkCamera.h>
-
+#include <vtkWindowToImageFilter.h>
+#include <vtkPNGWriter.h>
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -34,6 +35,7 @@ class vtkTimerCallback : public vtkCommand
   std::vector<vtkSmartPointer<vtkActor> > update_actors;
   std::map<int, std::vector < vtkSmartPointer<vtkActor> > > used_actors;
   int tmax;
+  bool save;
 
   static vtkTimerCallback *New()
   {
@@ -50,7 +52,7 @@ class vtkTimerCallback : public vtkCommand
     vtkRenderer * ren = win->GetRenderers()->GetFirstRenderer();
     for (auto actor : update_actors){ ren->RemoveActor(actor);}
     if (used_actors.find(TimerCount) == used_actors.end()) {
-      update_actors = v->VisualizeStep(TimerCount, taulist, false, colors, opacity);
+      update_actors = v->VisualizeStep(TimerCount, taulist, false, colors, opacity, save);
       used_actors[TimerCount] = update_actors;
     }
     else{
@@ -76,6 +78,9 @@ Visualizer::Visualizer(DataReader * _reader){
   winsize = {800,800};
   fps = 1;
   campitch = 0;
+  numlen = 6;
+  prefix = "im";
+  impath = "./";
 }
 
 void Visualizer::InitRenderer(){
@@ -90,7 +95,6 @@ void Visualizer::InitRenderer(){
 }
 
 void Visualizer::ModifyCamera(){
-  std::cout << "modify cam\n";
   vtkSmartPointer<vtkCamera> cam = vtkSmartPointer<vtkCamera>::New();
   cam->SetPosition(camposition);
   cam->SetFocalPoint(camfocus);
@@ -148,25 +152,17 @@ vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau, co
   return actor;
 }
 
-
-
-std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step, std::vector<int> taulist) {
-  std::vector<double> tau_opacity(taulist.size(),1);
-  std::vector<color> tau_colors(taulist.size(),{.5,.5,.5});
-  return VisualizeStep(step,taulist,false,tau_colors,tau_opacity);
-}
-
-std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
-                                                                   bool show){
-  std::vector<double> tau_opacity(taulist.size(),1);
-  std::vector<color> tau_colors(taulist.size(),{.5,.5,.5});
-  return VisualizeStep(step,taulist,show,tau_colors,tau_opacity);
+std::string Visualizer::GetImNameForStep(int step){
+  std::stringstream num;
+  num << std::setfill('0') << std::setw(numlen);
+  num << step;
+  return impath+prefix+"_"+num.str()+".png";
 }
 
 
 std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
                                                                      bool show,std::vector<color> tau_colors,
-                                                                   std::vector<double> tau_opacity){
+                                                                   std::vector<double> tau_opacity, bool save){
   std::stringstream title;
   title << "step " << step;
   renderWindow->SetWindowName(title.str().c_str());
@@ -184,18 +180,31 @@ std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std:
     renderWindowInteractor->Initialize();
     renderWindowInteractor->Start();
   }
+  if (save) {
+    vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+    windowToImageFilter->SetInput(renderWindow);
+    windowToImageFilter->SetMagnification(1); //set the resolution of the output image (3 times the current resolution of vtk render window)
+    windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
+    windowToImageFilter->ReadFrontBufferOff(); // read from the back buffer
+    windowToImageFilter->Update();
+    vtkSmartPointer <vtkPNGWriter> writer =
+        vtkSmartPointer<vtkPNGWriter>::New();
+    writer->SetFileName(GetImNameForStep(step).c_str());
+    writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+    writer->Write();
+  }
   return actors;
 }
 
 void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
-                         std::vector<color> colors, std::vector<double> opacity){
+                         std::vector<color> colors, std::vector<double> opacity, bool save){
   renderWindowInteractor->Initialize();
-  VisualizeStep(steps[0], static_tau, false, colors, opacity);
+  VisualizeStep(steps[0], static_tau, false, colors, opacity, save);
   std::vector<int> update_tau;
   vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
   cb->tmax = steps[steps.size()-1];
   cb->v = this;
-//  for (auto tau : taulist) {
+  cb->save = save;
   for (int i = 0; i < taulist.size(); i++){
     if (std::find(static_tau.begin(), static_tau.end(), taulist[i]) == static_tau.end()) {
       cb->taulist.push_back(taulist[i]);

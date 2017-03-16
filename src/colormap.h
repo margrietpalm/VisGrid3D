@@ -18,7 +18,7 @@ class ColorMap {
     std::string fn_colormap = thisfile.substr(0,thisfile.rfind("/")+1)+"colors.csv";
     std::cout << fn_colormap << std::endl;
     std::ifstream file;
-    file.open("../colors.csv");
+    file.open(fn_colormap);
     std::string line, name;
     double r,g,b;
     while ( getline(file,line)) {
