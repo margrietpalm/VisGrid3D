@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include "visualizer.h"
 #include "datareader.h"
+#include "colormap.h"
+
 //
 //using namespace boost::program_options;
 //namespace po = boost::program_options;
@@ -100,7 +102,8 @@ int main(int argc, char *argv[])
 //  po::variables_map pars = getPars(argc,argv);
 //  std::string datapath = "/home/mpalm/morpheus/3D_Migration_611/";
   std::string datapath = "/home/mpalm/morpheus/Example-Protrusion_616/";
-
+  ColorMap * cm = new ColorMap();
+  cm->PrintAvailableColors();
   std::string basename = "plot";
   std::string fn = "/home/mpalm/morpheus/Example-Protrusion_616/plot_000010.vtk";
 //  std::string fn = "/home/mpalm/morpheus/3D_Migration_611/plot_000001.vtk";

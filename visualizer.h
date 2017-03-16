@@ -15,10 +15,9 @@
 #include <vtkRenderWindowInteractor.h>
 
 #include "datareader.h"
+#include "colormap.h"
 
 
-
-struct color{ double r,g,b; };
 
 class Visualizer {
  public:
