@@ -5,6 +5,8 @@
 #include <iostream>     // std::cout, std::endl
 #include <iomanip>      // std::setfill, std::setw
 #include <sstream>      // std::stringstream
+#include <glob.h>
+#include <algorithm>
 
 #include "datareader.h"
 #include <vtkStructuredPoints.h>
@@ -19,6 +21,22 @@ DataReader::DataReader(){
 DataReader::DataReader(std::string _basename, std::string _datapath){
   basename = _basename;
   datapath = _datapath;
+}
+
+std::vector<int> DataReader::FindSteps(){
+  glob_t globbuf;
+  int err = glob((datapath+basename+"_*"+".vtk").c_str(), 0, NULL, &globbuf);
+  std::vector<int> steps;
+  if(err == 0)
+  {
+    for (size_t i = 0; i < globbuf.gl_pathc; i++) {
+      std::string s = globbuf.gl_pathv[i];
+      steps.push_back(stoi(s.substr(s.rfind('_')+1,s.rfind('.')-s.rfind('_')-1)));
+    }
+    globfree(&globbuf);
+  }
+  std::sort(steps.begin(), steps.end());
+  return steps;
 }
 
 std::string DataReader::GetFileNameForStep(int step){

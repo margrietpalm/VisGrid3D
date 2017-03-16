@@ -28,7 +28,7 @@ class ColorMap {
   };
 
   color GetRGBDouble(std::string colorname){
-    if (colormap.find(colorname) != colormap.end())
+    if (colormap.find(colorname) == colormap.end())
       return {0.5,0.5,0.5};
     else
       return colormap[colorname];

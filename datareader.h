@@ -21,6 +21,7 @@ class DataReader {
  public:
   DataReader();
   DataReader(std::string _basename, std::string _datapath);
+  std::vector<int> FindSteps();
   stepdata GetDataForStep(int step);
   stepdata ReadData(int step);
   std::map<int, stepdata> data;

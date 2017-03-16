@@ -25,7 +25,8 @@ class Visualizer {
   Visualizer(DataReader * _reader);
   void InitRenderer();
   void ModifyCamera();
-  void Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau);
+  void Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
+               std::vector<color> colors, std::vector<double> opacity);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist, bool show);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step, std::vector<int> taulist);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step,std::vector<int> taulist,

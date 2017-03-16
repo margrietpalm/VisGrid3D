@@ -29,6 +29,8 @@ class vtkTimerCallback : public vtkCommand
  public:
   Visualizer * v;
   std::vector<int> taulist;
+  std::vector<double> opacity;
+  std::vector<color> colors;
   std::vector<vtkSmartPointer<vtkActor> > update_actors;
   std::map<int, std::vector < vtkSmartPointer<vtkActor> > > used_actors;
   int tmax;
@@ -48,7 +50,7 @@ class vtkTimerCallback : public vtkCommand
     vtkRenderer * ren = win->GetRenderers()->GetFirstRenderer();
     for (auto actor : update_actors){ ren->RemoveActor(actor);}
     if (used_actors.find(TimerCount) == used_actors.end()) {
-      update_actors = v->VisualizeStep(TimerCount, taulist);
+      update_actors = v->VisualizeStep(TimerCount, taulist, false, colors, opacity);
       used_actors[TimerCount] = update_actors;
     }
     else{
@@ -188,16 +190,21 @@ std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std:
   return actors;
 }
 
-void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau){
+void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
+                         std::vector<color> colors, std::vector<double> opacity){
   renderWindowInteractor->Initialize();
-  VisualizeStep(steps[0], static_tau);
+  VisualizeStep(steps[0], static_tau, false, colors, opacity);
   std::vector<int> update_tau;
   vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
   cb->tmax = steps[steps.size()-1];
   cb->v = this;
-  for (auto tau : taulist) {
-    if (std::find(static_tau.begin(), static_tau.end(), tau) == static_tau.end())
-      cb->taulist.push_back(tau);
+//  for (auto tau : taulist) {
+  for (int i = 0; i < taulist.size(); i++){
+    if (std::find(static_tau.begin(), static_tau.end(), taulist[i]) == static_tau.end()) {
+      cb->taulist.push_back(taulist[i]);
+      cb->colors.push_back(colors[i]);
+      cb->opacity.push_back(opacity[i]);
+    }
   }
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent,cb);
   int timerId = renderWindowInteractor->CreateRepeatingTimer((int)(1000 / fps));
