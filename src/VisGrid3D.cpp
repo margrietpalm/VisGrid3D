@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
   if (opt.count("outdir")){ vis->impath = opt["outdir"].as<std::string>();}
   if (opt.count("prefix")){ vis->prefix = opt["prefix"].as<std::string>();}
   if (save){ vis->numlen = std::to_string(steps[steps.size()-1]).size(); }
-  
+
   // run animation
   vis->Animate(types,steps,stattypes,colors,alpha,save);
 
