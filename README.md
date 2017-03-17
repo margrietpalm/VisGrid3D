@@ -34,4 +34,4 @@ Note that VTK files can become quite large. So keep the number of output files l
 
 ## Acknowledgements
 - We thank the developers of the [cxxopts](https://github.com/jarro2783/cxxopts) library which we used for parsing command line arguments.
-- We thank the developers of [matplotlib](http://matplotlib.org/) from which we extracted the colormap stored in colors.csv.
+- We thank the developers of [matplotlib](http://matplotlib.org/) from which we extracted the colortable that maps color names to rgb values (colors.csv).
