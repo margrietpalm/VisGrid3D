@@ -23,6 +23,12 @@ DataReader::DataReader(std::string _basename, std::string _datapath){
   datapath = _datapath;
 }
 
+DataReader::DataReader(std::string _basename, std::string _datapath, std::vector<std::string> _extra_fields){
+  basename = _basename;
+  datapath = _datapath;
+  extra_fields = _extra_fields;
+}
+
 std::vector<int> DataReader::FindSteps(){
   glob_t globbuf;
   int err = glob((datapath+basename+"_*"+".vtk").c_str(), 0, NULL, &globbuf);
@@ -51,14 +57,26 @@ stepdata DataReader::GetDataForStep(int step){
   return ReadData(step);
 }
 
+
+
+
 stepdata DataReader::ReadData(int step){
   reader = vtkSmartPointer<vtkStructuredPointsReader>::New();
   std::string fn = GetFileNameForStep(step);
   reader->SetFileName(fn.c_str());
+  std::cout << "Available fields:";
+  for (int i = 0; i < reader->GetNumberOfScalarsInFile(); i++) {
+    fields.push_back(reader->GetScalarsNameInFile(i));
+    std::cout << " " << reader->GetScalarsNameInFile(i);
+  }
+  std::cout << std::endl;
   stepdata sd;
   sd.sp = reader->GetOutput();
   sd.sigma = GetArrayFromFile("cell.id");
   sd.tau = GetArrayFromFile("cell.type");
+  for (auto f : extra_fields){
+    sd.extra_fields[f] = GetArrayFromFile(f);
+  }
 //  data[step] = sd;
   return sd;
 }
@@ -66,10 +84,19 @@ stepdata DataReader::ReadData(int step){
 
 
 vtkSmartPointer<vtkDataArray> DataReader::GetArrayFromFile(std::string name){
-  reader->SetScalarsName(name.c_str());
-  reader->Update();  //I think this actually makes the reader do something
-  vtkSmartPointer<vtkStructuredPoints> sp = reader->GetOutput();
-  vtkSmartPointer<vtkPointData> pd = sp->GetPointData();
-  pd->Update();
-  return pd->GetScalars(name.c_str());
+  std::cout << "Get array " << name << std::endl;
+  if (std::find(fields.begin(),fields.end(),name)!=fields.end()) {
+    std::cout << "Found field " << name << std::endl;
+    reader->SetScalarsName(name.c_str());
+    reader->Update();  //I think this actually makes the reader do something
+    vtkSmartPointer <vtkStructuredPoints> sp = reader->GetOutput();
+    vtkSmartPointer <vtkPointData> pd = sp->GetPointData();
+    pd->Update();
+    return pd->GetScalars(name.c_str());
+  }
+  else{
+    std::cout << "Could not find array " << name << " in " << reader->GetFileName() << std::endl;
+    exit(0);
+  }
 };
+

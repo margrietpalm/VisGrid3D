@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "cxxopts.hpp"
 #include <fstream>
 #include <boost/program_options.hpp>
@@ -28,6 +29,7 @@ cxxopts::Options GetPars(int argc, char *argv[]){
       ("h,help", "Print help")
       ("i,simdir", "Folder containing vtk files", cxxopts::value<std::string>())
       ("t,types", "Comma-separated list of cell types to visualize", cxxopts::value<std::string>())
+      ("f,fields","Comma-separated list of fields (stored in the vtk) used to color the cells (use none to skip a cell type)", cxxopts::value<std::string>())
       ("c,colors", "Comma-separated list of colors associated to the cell types", cxxopts::value<std::string>())
       ("a,alpha", "Comma-separated list of alpha-values associated to the cell types", cxxopts::value<std::string>())
       ("static", "Comma-separated list of static cell types", cxxopts::value<std::string>())
@@ -39,7 +41,7 @@ cxxopts::Options GetPars(int argc, char *argv[]){
       ("campos","camera position", cxxopts::value<std::string>())
       ("camfocus","camera focus", cxxopts::value<std::string>())
       ("campitch","camera pitch", cxxopts::value<double>())
-      ("f,fps","frame rate", cxxopts::value<int>())
+      ("fps","frame rate", cxxopts::value<int>())
       ("o,outdir", "Folder to write images to", cxxopts::value<std::string>())
       ("s,save", "Save images", cxxopts::value<bool>())
       ("prefix", "Prefix for image names", cxxopts::value<std::string>())
@@ -79,7 +81,15 @@ int main(int argc, char *argv[])
   std::string datapath;
   if (opt.count("simdir")){ datapath = opt["simdir"].as<std::string>(); }
   else { datapath = "./"; }
-  DataReader * dr = new DataReader("plot",datapath);
+  std::vector<std::string> colorfields;
+  std::vector<std::string> extra_fields;
+  if (opt.count("fields")){
+    colorfields = SplitString(opt["fields"].as<std::string>());
+    extra_fields = colorfields;
+    std::vector<std::string>::iterator it = std::unique(extra_fields.begin(), extra_fields.end());
+    extra_fields.resize(std::distance(extra_fields.begin(),it));
+  }
+  DataReader * dr = new DataReader("plot",datapath,extra_fields);
   // select step to visualize
   if (opt.count("steps")){
     for (auto s : SplitString(opt["steps"].as<std::string>()))
