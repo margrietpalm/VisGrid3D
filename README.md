@@ -53,7 +53,7 @@ has multiple values, they must be presented in a comma-separated list.
 
 - Save snapshots:
 
-```visgrid3D -i morpheus/3d_migration_138/ -t 0,2 -c red,grey -a 1,0.1 --static 2 -s```
+```VisGrid3D -i morpheus/3d_migration_138/ -t 0,2 -c red,grey -a 1,0.1 --static 2 -s```
 
 
 
