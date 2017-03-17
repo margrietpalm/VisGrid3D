@@ -1,5 +1,7 @@
 # Visualizing 3D grid data
 
+The *old* Python based VisGrid3D can be found [here](https://github.com/margrietpalm/VisGrid3D-python)
+
 ## Installation
 
 1. Install dependencies 
