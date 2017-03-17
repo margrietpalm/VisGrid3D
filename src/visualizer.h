@@ -6,16 +6,17 @@
 #define VISGRID3D_VISUALIZER_H
 
 #include <vector>
-
+#include <utility>
 #include <vtkActor.h>
 #include <vtkSmartPointer.h>
 #include <vtkPoints.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkUnsignedCharArray.h>
 
 #include "datareader.h"
-#include "colormap.h"
+#include "colortable.h"
 
 
 
@@ -26,10 +27,12 @@ class Visualizer {
   void InitRenderer();
   void ModifyCamera();
   void Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
-               std::vector<color> colors, std::vector<double> opacity, bool save);
+               std::vector<color> colors, std::vector<double> opacity, bool save,
+               std::vector<std::string> color_by);
   std::vector<vtkSmartPointer <vtkActor> > VisualizeStep(int step,std::vector<int> taulist,
                                                          bool show,std::vector<color> tau_colors,
-                                                         std::vector<double> tau_opacity, bool save);
+                                                         std::vector<double> tau_opacity, bool save,
+                                                         std::vector<std::string> color_by);
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;
@@ -44,10 +47,15 @@ class Visualizer {
   vtkSmartPointer<vtkActor> GetActorForTau(){};
   vtkSmartPointer<vtkActor> GetActorForBBox(){};
   vtkSmartPointer<vtkActor> GetActorForBnd(){};
-  vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau, color c, double opacity);
-  vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau);
+  vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau, color c, double opacity, std::string color_by);
+//  vtkSmartPointer<vtkActor> GetActorForType(stepdata data, int tau);
   vtkSmartPointer<vtkActor> GetActerForBBox(stepdata data);
   vtkSmartPointer<vtkPoints> GetPointsForTau(stepdata data, int tau);
+//  vtkSmartPointer<vtkUnsignedCharArray> GetColors(stepdata data, std::string color_by);
+  std::pair<vtkSmartPointer<vtkPoints>, vtkSmartPointer<vtkUnsignedCharArray>> GetPointsAndColorsForTau(stepdata data,
+                                                                                                        int tau,
+                                                                                                        std::string color_by);
+
   std::string GetImNameForStep(int step);
 
   vtkSmartPointer<vtkRenderer> renderer;

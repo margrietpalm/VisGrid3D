@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "visualizer.h"
 #include "datareader.h"
-#include "colormap.h"
+#include "colortable.h"
 
 std::vector<std::string> SplitString(std::string s){
   int idx_prev = 0;
@@ -81,11 +81,11 @@ int main(int argc, char *argv[])
   std::string datapath;
   if (opt.count("simdir")){ datapath = opt["simdir"].as<std::string>(); }
   else { datapath = "./"; }
-  std::vector<std::string> colorfields;
+  std::vector<std::string> color_by;
   std::vector<std::string> extra_fields;
   if (opt.count("fields")){
-    colorfields = SplitString(opt["fields"].as<std::string>());
-    extra_fields = colorfields;
+    color_by = SplitString(opt["fields"].as<std::string>());
+    extra_fields = color_by;
     std::vector<std::string>::iterator it = std::unique(extra_fields.begin(), extra_fields.end());
     extra_fields.resize(std::distance(extra_fields.begin(),it));
   }
@@ -142,6 +142,10 @@ int main(int argc, char *argv[])
     std::cout << "Alpha not specified - default to 1" << std::endl;
     for (auto t : types){alpha.push_back(1);}
   }
+  if (color_by.size() != types.size()){
+    color_by.clear();
+    for (auto t : types){color_by.push_back("none");}
+  }
 
   // initialize visualization
   Visualizer * vis = new Visualizer(dr);
@@ -195,7 +199,11 @@ int main(int argc, char *argv[])
   if (save){ vis->numlen = std::to_string(steps[steps.size()-1]).size(); }
 
   // run animation
-  vis->Animate(types,steps,stattypes,colors,alpha,save);
+  if (steps.size() > 1)
+    vis->Animate(types,steps,stattypes,colors,alpha,save,color_by);
+  else
+    vis->VisualizeStep(steps[0],types,true,colors,alpha,save, color_by);
+
 
   return EXIT_SUCCESS;
 }

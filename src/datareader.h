@@ -12,6 +12,7 @@
 #include <vtkStructuredPointsReader.h>
 #include <vtkDataArray.h>
 
+
 struct stepdata{
   vtkSmartPointer<vtkStructuredPoints> sp;
   vtkSmartPointer<vtkDataArray> sigma;
@@ -34,8 +35,8 @@ class DataReader {
   vtkSmartPointer<vtkDataArray> GetArrayFromFile(std::string name);
   vtkSmartPointer<vtkStructuredPointsReader> reader;
   std::string GetFileNameForStep(int step);
-  std::vector<std::string> extra_fields;
   std::vector<std::string> fields;
+  std::vector<std::string> extra_fields;
   std::string basename;
   std::string datapath;
 

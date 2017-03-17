@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 
+#include <vtkVersion.h>
 #include <vtkStructuredPoints.h>
 #include <vtkDataSetMapper.h>
 #include <vtkDataArray.h>
@@ -21,6 +22,17 @@
 #include <vtkCamera.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
+#include <vtkLookupTable.h>
+#include <vtkUnsignedCharArray.h>
+#include <vtkCellArray.h>
+
+// For compatibility with new VTK generic data arrays
+#ifdef vtkGenericDataArray_h
+#define InsertNextTupleValue InsertNextTypedTuple
+#endif
+
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -32,8 +44,10 @@ class vtkTimerCallback : public vtkCommand
   std::vector<int> taulist;
   std::vector<double> opacity;
   std::vector<color> colors;
+  std::vector<std::string> color_by;
   std::vector<vtkSmartPointer<vtkActor> > update_actors;
   std::map<int, std::vector < vtkSmartPointer<vtkActor> > > used_actors;
+  std::vector<int> steps;
   int tmax;
   bool save;
 
@@ -52,14 +66,14 @@ class vtkTimerCallback : public vtkCommand
     vtkRenderer * ren = win->GetRenderers()->GetFirstRenderer();
     for (auto actor : update_actors){ ren->RemoveActor(actor);}
     if (used_actors.find(TimerCount) == used_actors.end()) {
-      update_actors = v->VisualizeStep(TimerCount, taulist, false, colors, opacity, save);
-      used_actors[TimerCount] = update_actors;
+      update_actors = v->VisualizeStep(steps[TimerCount], taulist, false, colors, opacity, save, color_by);
+      used_actors[steps[TimerCount]] = update_actors;
     }
     else{
       std::stringstream title;
-      title << "step " << TimerCount;
+      title << "step " << steps[TimerCount];
       win->SetWindowName(title.str().c_str());
-      for (auto actor : used_actors[TimerCount]){
+      for (auto actor : used_actors[steps[TimerCount]]){
         ren->AddActor(actor);
       }
       win->Render();
@@ -109,7 +123,11 @@ vtkSmartPointer<vtkActor> Visualizer::GetActerForBBox(stepdata data){
   boxdata->SetSpacing(dim[0], dim[1], dim[2]);
   boxdata->SetOrigin(0, 0, 0);
   vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
-  mapper->SetInputData(boxdata);
+  #if VTK_MAJOR_VERSION <= 5
+    mapper->SetInput(boxdata);
+  #else
+    mapper->SetInputData(boxdata);
+  #endif
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   actor->GetProperty()->SetColor(bbcolor.r,bbcolor.g,bbcolor.b);
   actor->GetProperty()->SetRepresentationToWireframe();
@@ -127,28 +145,80 @@ vtkSmartPointer<vtkPoints> Visualizer::GetPointsForTau(stepdata data, int tau){
   return points;
 }
 
-vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau) {
-  return GetActorForType(data,tau,{0.5,0.5,0.5},1);
+std::pair<vtkSmartPointer<vtkPoints>, vtkSmartPointer<vtkUnsignedCharArray>> Visualizer::GetPointsAndColorsForTau(stepdata data, int tau, std::string color_by){
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkDataArray> v = data.extra_fields[color_by];
+  double color[3];
+
+  // Set up character array that holds the colors for each voxel
+  vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+  colors->SetName("colors");
+  colors->SetNumberOfComponents(3);
+
+  // Create lookup table for colors
+  vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+  double * range = v->GetRange();
+  lut->SetTableRange(range[0],range[1]);
+  lut->Build();
+
+  // get points and set colors
+  for(int i=0;i< (int)data.sp->GetNumberOfPoints(); i++){
+    double p[3];
+    data.sp->GetPoint(i,p);
+    if (data.tau->GetComponent(i,0) == tau) {
+      points->InsertNextPoint(p);
+      lut->GetColor(v->GetComponent(i, 0), color);
+      unsigned char ccolor[3];
+      for (int c = 0; c < 3; c++) { ccolor[c] = static_cast<unsigned char>(255.0 * color[c]); }
+      colors->InsertNextTupleValue(ccolor);
+    }
+  }
+  return {points,colors};
 }
 
+//vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau) {
+//  return GetActorForType(data,tau,{0.5,0.5,0.5},1,"none");
+//}
 
-vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau, color c, double opacity){
-  vtkSmartPointer<vtkPoints> points = GetPointsForTau(data,tau);
+
+vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau, color c, double opacity, std::string color_by){
   vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
-  polydata->SetPoints(points);
-  vtkSmartPointer<vtkPolyData> glyph = vtkSmartPointer<vtkPolyData>::New();
+  vtkSmartPointer<vtkPoints> points;
+  vtkSmartPointer<vtkUnsignedCharArray> colors;
+  if (color_by.compare("none") == 0) {
+    points = GetPointsForTau(data,tau);
+    polydata->SetPoints(points);
+  }
+  else{
+    std::pair<vtkSmartPointer<vtkPoints>, vtkSmartPointer<vtkUnsignedCharArray>> p = GetPointsAndColorsForTau(data,tau,color_by);
+    points = p.first;
+    colors = p.second;
+    polydata->SetPoints(points);
+    polydata->GetPointData()->SetScalars(colors);
+  }
+//  vtkSmartPointer<vtkPolyData> glyph = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkCubeSource> cubeSource = vtkSmartPointer<vtkCubeSource>::New();
   vtkSmartPointer<vtkGlyph3D> glyph3D = vtkSmartPointer<vtkGlyph3D>::New();
-  glyph3D->SetSourceConnection(cubeSource->GetOutputPort());
   glyph3D->SetColorModeToColorByScalar();
-  glyph3D->SetInputData(polydata);
+  glyph3D->SetSourceConnection(cubeSource->GetOutputPort());
+  #if VTK_MAJOR_VERSION <= 5
+    glyph3D->SetInput(polydata);
+  #else
+    glyph3D->SetInputData(polydata);
+  #endif
+  glyph3D->ScalingOff();
   glyph3D->Update();
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(glyph3D->GetOutputPort());
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
-  actor->GetProperty()->SetOpacity(opacity);
-  actor->GetProperty()->SetColor(c.r,c.g,c.b);
+  if (color_by.compare("none") != 0){
+    std::cout << "Color " << tau << " by " << color_by << std::endl;
+  }
+  else {
+    actor->GetProperty()->SetOpacity(opacity);
+    actor->GetProperty()->SetColor(c.r, c.g, c.b);
+  }
   return actor;
 }
 
@@ -162,14 +232,15 @@ std::string Visualizer::GetImNameForStep(int step){
 
 std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std::vector<int> taulist,
                                                                      bool show,std::vector<color> tau_colors,
-                                                                   std::vector<double> tau_opacity, bool save){
+                                                                   std::vector<double> tau_opacity, bool save,
+                                                                   std::vector<std::string> color_by){
   std::stringstream title;
   title << "step " << step;
   renderWindow->SetWindowName(title.str().c_str());
   stepdata data = reader->GetDataForStep(step);
   std::vector<vtkSmartPointer <vtkActor> > actors;
   for (int i = 0; i < taulist.size(); i++){
-    vtkSmartPointer <vtkActor> actor = GetActorForType(data, taulist[i], tau_colors[i], tau_opacity[i]);
+    vtkSmartPointer <vtkActor> actor = GetActorForType(data, taulist[i], tau_colors[i], tau_opacity[i], color_by[i]);
     renderer->AddActor(actor);
     actors.push_back(actor);
   }
@@ -197,19 +268,22 @@ std::vector<vtkSmartPointer <vtkActor> > Visualizer::VisualizeStep(int step,std:
 }
 
 void Visualizer::Animate(std::vector<int> taulist,std::vector<int> steps, std::vector<int> static_tau,
-                         std::vector<color> colors, std::vector<double> opacity, bool save){
+                         std::vector<color> colors, std::vector<double> opacity, bool save,
+                         std::vector<std::string> color_by){
   renderWindowInteractor->Initialize();
-  VisualizeStep(steps[0], static_tau, false, colors, opacity, save);
+  VisualizeStep(steps[0], static_tau, false, colors, opacity, save, color_by);
   std::vector<int> update_tau;
   vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
-  cb->tmax = steps[steps.size()-1];
+  cb->tmax = steps.size();
   cb->v = this;
   cb->save = save;
+  cb->steps = steps;
   for (int i = 0; i < taulist.size(); i++){
     if (std::find(static_tau.begin(), static_tau.end(), taulist[i]) == static_tau.end()) {
       cb->taulist.push_back(taulist[i]);
       cb->colors.push_back(colors[i]);
       cb->opacity.push_back(opacity[i]);
+      cb->color_by.push_back(color_by[i]);
     }
   }
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent,cb);

@@ -64,18 +64,15 @@ stepdata DataReader::ReadData(int step){
   reader = vtkSmartPointer<vtkStructuredPointsReader>::New();
   std::string fn = GetFileNameForStep(step);
   reader->SetFileName(fn.c_str());
-  std::cout << "Available fields:";
-  for (int i = 0; i < reader->GetNumberOfScalarsInFile(); i++) {
+  for (int i = 0; i < reader->GetNumberOfScalarsInFile(); i++)
     fields.push_back(reader->GetScalarsNameInFile(i));
-    std::cout << " " << reader->GetScalarsNameInFile(i);
-  }
-  std::cout << std::endl;
   stepdata sd;
   sd.sp = reader->GetOutput();
   sd.sigma = GetArrayFromFile("cell.id");
   sd.tau = GetArrayFromFile("cell.type");
   for (auto f : extra_fields){
-    sd.extra_fields[f] = GetArrayFromFile(f);
+    if (f.compare("none") != 0)
+      sd.extra_fields[f] = GetArrayFromFile(f);
   }
 //  data[step] = sd;
   return sd;
@@ -84,9 +81,7 @@ stepdata DataReader::ReadData(int step){
 
 
 vtkSmartPointer<vtkDataArray> DataReader::GetArrayFromFile(std::string name){
-  std::cout << "Get array " << name << std::endl;
   if (std::find(fields.begin(),fields.end(),name)!=fields.end()) {
-    std::cout << "Found field " << name << std::endl;
     reader->SetScalarsName(name.c_str());
     reader->Update();  //I think this actually makes the reader do something
     vtkSmartPointer <vtkStructuredPoints> sp = reader->GetOutput();
