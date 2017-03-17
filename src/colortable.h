@@ -10,10 +10,10 @@
 
 struct color { double r, g, b; };
 
-class ColorMap {
+class ColorTable {
  public:
 
-  ColorMap() {
+  ColorTable() {
     std::string thisfile = __FILE__;
     std::string fn_colortable = thisfile.substr(0, thisfile.rfind("/") + 1) + "colors.csv";
     std::cout << fn_colortable << std::endl;

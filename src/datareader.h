@@ -13,7 +13,7 @@
 #include <vtkDataArray.h>
 
 
-struct stepdata{
+struct stepdata {
   vtkSmartPointer<vtkStructuredPoints> sp;
   vtkSmartPointer<vtkDataArray> sigma;
   vtkSmartPointer<vtkDataArray> tau;
@@ -28,8 +28,6 @@ class DataReader {
   std::vector<int> FindSteps();
   stepdata GetDataForStep(int step);
   stepdata ReadData(int step);
-  std::map<int, stepdata> data;
-
 
  private:
   vtkSmartPointer<vtkDataArray> GetArrayFromFile(std::string name);
