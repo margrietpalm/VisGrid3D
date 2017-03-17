@@ -55,6 +55,9 @@ has multiple values, they must be presented in a comma-separated list.
 
 ```VisGrid3D -i morpheus/3d_migration_138/ -t 0,2 -c red,grey -a 1,0.1 --static 2 -s```
 
+- Map a field, named 'act' on the cell (please note that I changed the order of amoeba and medium in Protrusion_3D example):
+
+```VisGrid3D -i ~/morpheus/Example-Protrusion_616/ -t 1 --campos 500,500,400 --camfocus 100,100,100 --steps 5 -f act --fmin 0 --fmax 150```
 
 
 
