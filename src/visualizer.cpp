@@ -2,6 +2,9 @@
 // Created by mpalm on 15/03/17.
 //
 
+// TODO: Add support for drawing surfaces instead of voxels
+// TODO: Add support for drawing colored boundaries
+
 #include "visualizer.h"
 #include <sstream>      // std::stringstream
 #include <algorithm>

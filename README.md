@@ -1,11 +1,5 @@
 # Visualizing 3D grid data
 
-## Todo list
-
-- Add support for generating movies
-- Add support for drawing surfaces instead of voxels
-- Add support for drawing colored boundaries
-
 ## Installation
 
 1. Install dependencies 

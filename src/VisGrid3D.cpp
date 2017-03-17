@@ -8,6 +8,9 @@
 #include "visualizer.h"
 #include "colormap.h"
 
+// TODO: Add support for generating movies
+
+
 std::vector<std::string> SplitString(std::string s) {
   unsigned long idx_prev = 0;
   unsigned long idx = s.find(",", idx_prev);
