@@ -49,7 +49,6 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("s,save", "Save images", cxxopts::value<bool>())
       ("prefix", "Prefix for image names", cxxopts::value<std::string>())
       ("m,colormap","File with colormap to be used with the fields", cxxopts::value<std::string>())
-      ("frange","min and max value of the field", cxxopts::value<std::string>())
       ("fmax","Comma-seperated list with max value for each field", cxxopts::value<std::string>())
       ("fmin","Comma-seperated list with min value for each field", cxxopts::value<std::string>())
       ("showcolors", "show available colors", cxxopts::value<bool>());
