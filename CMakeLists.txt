@@ -11,7 +11,8 @@ set(SOURCE_FILES
         src/movie.h
         src/VisGrid3D.cpp
         src/visualizer.cpp
-        src/visualizer.h)
+        src/visualizer.h
+        src/colormap.h)
 
 find_package(VTK REQUIRED)
 find_package(ImageMagick REQUIRED)

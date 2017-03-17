@@ -2,8 +2,8 @@
 // Created by mpalm on 16/03/17.
 //
 
-#ifndef VISGRID3D_COLORMAP_H
-#define VISGRID3D_COLORMAP_H
+#ifndef VISGRID3D_COLORTABLE_H
+#define VISGRID3D_COLORTABLE_H
 
 #include <string>
 #include <fstream>
@@ -60,4 +60,4 @@ class ColorTable {
 
 };
 
-#endif //VISGRID3D_COLORMAP_H
+#endif //VISGRID3D_COLORTABLE_H

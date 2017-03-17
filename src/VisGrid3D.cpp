@@ -6,6 +6,7 @@
 #include <fstream>
 #include <boost/program_options.hpp>
 #include "visualizer.h"
+#include "colormap.h"
 
 std::vector<std::string> SplitString(std::string s) {
   unsigned long idx_prev = 0;
@@ -44,6 +45,10 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("o,outdir", "Folder to write images to", cxxopts::value<std::string>())
       ("s,save", "Save images", cxxopts::value<bool>())
       ("prefix", "Prefix for image names", cxxopts::value<std::string>())
+      ("m,colormap","File with colormap to be used with the fields", cxxopts::value<std::string>())
+      ("frange","min and max value of the field", cxxopts::value<std::string>())
+      ("fmax","Comma-seperated list with max value for each field", cxxopts::value<std::string>())
+      ("fmin","Comma-seperated list with min value for each field", cxxopts::value<std::string>())
       ("showcolors", "show available colors", cxxopts::value<bool>());
 
 
@@ -59,7 +64,6 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-
   std::vector<int> steps;
   std::vector<double> alpha;
   std::vector<color> colors;
@@ -141,8 +145,24 @@ int main(int argc, char *argv[]) {
     color_by.clear();
     for (auto t : types) { color_by.push_back("none"); }
   }
+  ColorMap * cm;
+  if (opt.count("colormap") == 0)
+    cm = new ColorMap();
+  else
+    cm = new ColorMap(opt["colormap"].as<std::string>());
+  std::vector<ColorMap *> cms(types.size(),cm);
+  if ((opt.count("fmin") != 0) & (opt.count("fmax") != 0)){
+    std::vector<std::string> fmin = SplitString(opt["fmin"].as<std::string>());
+    std::vector<std::string> fmax = SplitString(opt["fmax"].as<std::string>());
+    if ((fmin.size() == cms.size()) & (fmax.size() == cms.size())) {
+      for (int i = 0; i < cms.size(); i++) {
+        cms[i]->gmin = stod(fmin[i]);
+        cms[i]->gmax = stod(fmax[i]);
+      }
+    }
+  }
 
-  // initialize visualization
+    // initialize visualization
   Visualizer *vis = new Visualizer(dr);
   if (opt.count("width")) { vis->winsize[0] = opt["width"].as<int>(); }
   if (opt.count("height")) { vis->winsize[1] = opt["height"].as<int>(); }
@@ -194,9 +214,9 @@ int main(int argc, char *argv[]) {
 
   // run animation
   if (steps.size() > 1)
-    vis->Animate(types, steps, stattypes, colors, alpha, save, color_by);
+    vis->Animate(types, steps, stattypes, colors, alpha, save, color_by, cms);
   else
-    vis->VisualizeStep(steps[0], types, true, colors, alpha, save, color_by);
+    vis->VisualizeStep(steps[0], types, true, colors, alpha, save, color_by, cms);
 
 
   return EXIT_SUCCESS;
