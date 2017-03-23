@@ -15,7 +15,7 @@ cmake ../
 make
 ```
 
-Note, on OSX you may need to use clang++ instead of gcc, see issue #3.
+Note, on OSX you may need to use clang++ instead of gcc (see [issue #3](https://github.com/margrietpalm/VisGrid3D/issues/3)).
 
 
 ## Generating VTK files in Morpheus
