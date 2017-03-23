@@ -8,7 +8,6 @@ set(SOURCE_FILES
         src/cxxopts.hpp
         src/datareader.cpp
         src/datareader.h
-        src/movie.h
         src/VisGrid3D.cpp
         src/visualizer.cpp
         src/visualizer.h
