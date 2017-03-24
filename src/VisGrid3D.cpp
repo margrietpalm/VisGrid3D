@@ -7,6 +7,7 @@
 #include <boost/program_options.hpp>
 #include "visualizer.h"
 #include "colormap.h"
+#include <boost/filesystem.hpp>
 
 // TODO: Add support for generating movies
 
@@ -64,6 +65,13 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
   std::string types = options["types"].as<std::string>();
   std::cout << types << std::endl;
   return options;
+}
+
+void SetOutputDirectory(std::string outdir){
+  boost::filesystem::path p (outdir);
+  // clean up old simulation files
+  if (!(boost::filesystem::is_directory(p)))
+    boost::filesystem::create_directories(p);
 }
 
 
@@ -212,7 +220,10 @@ int main(int argc, char *argv[]) {
   // set saving options
   bool save = false;
   if (opt.count("save") | opt.count("outdir")) { save = true; }
-  if (opt.count("outdir")) { vis->impath = opt["outdir"].as<std::string>(); }
+  if (opt.count("outdir")) {
+    SetOutputDirectory(opt["outdir"].as<std::string>());
+    vis->impath = opt["outdir"].as<std::string>();
+  }
   if (opt.count("prefix")) { vis->prefix = opt["prefix"].as<std::string>(); }
   if (save) { vis->numlen = (int)std::to_string(steps[steps.size() - 1]).size(); }
 

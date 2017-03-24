@@ -16,13 +16,13 @@ set(SOURCE_FILES
 find_package(VTK REQUIRED)
 find_package(ImageMagick REQUIRED)
 include(${VTK_USE_FILE})
-message(${VTK_LIBRARIES})
 
+find_package(Boost COMPONENTS filesystem REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIR})
 
 add_executable(VisGrid3D ${SOURCE_FILES})
 
-if(VTK_LIBRARIES)
-    target_link_libraries(VisGrid3D ${VTK_LIBRARIES})
-else()
-    target_link_libraries(VisGrid3D vtkHybrid vtkWidgets)
-endif()
+target_link_libraries(VisGrid3D ${VTK_LIBRARIES})
+target_link_libraries(VisGrid3D ${Boost_LIBRARIES} )
+
