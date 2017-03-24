@@ -51,7 +51,9 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("m,colormap","File with colormap to be used with the fields", cxxopts::value<std::string>())
       ("fmax","Comma-seperated list with max value for each field", cxxopts::value<std::string>())
       ("fmin","Comma-seperated list with min value for each field", cxxopts::value<std::string>())
-      ("showcolors", "show available colors", cxxopts::value<bool>());
+      ("showcolors", "show available colors", cxxopts::value<bool>())
+      ("l,loop","Loop visualization", cxxopts::value<bool>())
+      ;
 
 
   options.parse(argc, argv);
@@ -214,9 +216,13 @@ int main(int argc, char *argv[]) {
   if (opt.count("prefix")) { vis->prefix = opt["prefix"].as<std::string>(); }
   if (save) { vis->numlen = (int)std::to_string(steps[steps.size() - 1]).size(); }
 
-  // run animation
+  bool loop = false;
+  if (opt.count("loop")) {loop = true;}
+
+
+    // run animation
   if (steps.size() > 1)
-    vis->Animate(types, steps, stattypes, colors, alpha, save, color_by, cms);
+    vis->Animate(types, steps, stattypes, colors, alpha, save, color_by, cms, loop);
   else
     vis->VisualizeStep(steps[0], types, true, colors, alpha, save, color_by, cms);
 

@@ -45,6 +45,7 @@ class vtkTimerCallback: public vtkCommand {
   std::map<int, std::vector<vtkSmartPointer<vtkActor> > > used_actors;
   std::vector<int> steps;
   std::vector<ColorMap *> cms;
+  bool loop;
   int tmax;
   bool save;
 
@@ -55,9 +56,19 @@ class vtkTimerCallback: public vtkCommand {
   }
 
   virtual void Execute(vtkObject *caller, unsigned long eventId, void *vtkNotUsed(callData)) {
-    if (this->TimerCount == tmax) { this->TimerCount = 0; }
-
     vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::SafeDownCast(caller);
+    if (this->TimerCount == tmax) {
+      if (this->loop)
+        this->TimerCount = 0;
+      else {
+        iren->DestroyTimer();
+        iren->GetRenderWindow()->Finalize();
+
+        // Stop the interactor
+        iren->TerminateApp();
+        std::cout << "Closing window..." << std::endl;
+      }
+    }
     vtkRenderWindow *win = iren->GetRenderWindow();
     vtkRenderer *ren = win->GetRenderers()->GetFirstRenderer();
     for (auto actor : update_actors) { ren->RemoveActor(actor); }
@@ -70,7 +81,8 @@ class vtkTimerCallback: public vtkCommand {
                                        save,
                                        color_by,
                                        cms);
-      used_actors[steps[TimerCount]] = update_actors;
+      if (loop)
+        used_actors[steps[TimerCount]] = update_actors;
     } else {
       std::stringstream title;
       title << "step " << steps[TimerCount];
@@ -282,7 +294,7 @@ void Visualizer::Animate(std::vector<int> taulist,
                          std::vector<double> opacity,
                          bool save,
                          std::vector<std::string> color_by,
-                         std::vector<ColorMap *> cms) {
+                         std::vector<ColorMap *> cms,bool loop) {
   renderWindowInteractor->Initialize();
   VisualizeStep(steps[0],
                 static_tau,
@@ -299,6 +311,7 @@ void Visualizer::Animate(std::vector<int> taulist,
   cb->save = save;
   cb->steps = steps;
   cb->cms = cms;
+  cb->loop = loop;
   for (int i = 0; i < taulist.size(); i++) {
     if (std::find(static_tau.begin(), static_tau.end(), taulist[i]) == static_tau.end()) {
       cb->taulist.push_back(taulist[i]);

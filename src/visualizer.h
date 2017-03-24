@@ -28,7 +28,7 @@ class Visualizer {
   void ModifyCamera();
   void Animate(std::vector<int> taulist, std::vector<int> steps, std::vector<int> static_tau,
                  std::vector<color> colors, std::vector<double> opacity, bool save,
-                 std::vector<std::string> color_by, std::vector<ColorMap *> cms);
+                 std::vector<std::string> color_by, std::vector<ColorMap *> cms, bool loop);
   std::vector<vtkSmartPointer<vtkActor> > VisualizeStep(int step,
                                                           std::vector<int> taulist,
                                                           bool show,
