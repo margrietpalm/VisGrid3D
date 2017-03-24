@@ -182,11 +182,15 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> v = SplitString(opt["bgcolor"].as<std::string>());
     if (v.size() == 3)
       vis->bgcolor = {stod(v[0]), stod(v[1]), stod(v[2])};
+    else if (v.size() == 1)
+      vis->bgcolor = ct->GetRGBDouble(v[0]);
   }
   if (opt.count("bboxcolor")) {
     std::vector<std::string> v = SplitString(opt["bboxcolor"].as<std::string>());
     if (v.size() == 3)
       vis->bbcolor = {stod(v[0]), stod(v[1]), stod(v[2])};
+    else if (v.size() == 1)
+      vis->bbcolor = ct->GetRGBDouble(v[0]);
   }
   if (opt.count("fps")) { vis->fps = opt["fps"].as<double>(); }
   vis->InitRenderer();
