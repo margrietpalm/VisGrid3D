@@ -15,6 +15,8 @@ cmake ../
 make
 ```
 
+Note, on OSX you may need to use clang++ instead of gcc (see [issue #3](https://github.com/margrietpalm/VisGrid3D/issues/3)).
+
 
 ## Generating VTK files in Morpheus
 Morpheus can generate VTK files with the *VtkPlotter* analysis plugin. Set up this plugin to write ascii files and
