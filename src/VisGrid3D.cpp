@@ -55,6 +55,7 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("showcolors", "show available colors", cxxopts::value<bool>())
       ("l,loop","Loop visualization", cxxopts::value<bool>())
       ("q,quiet","Hide visualization windows", cxxopts::value<bool>())
+      ("clean","Remove existing content of outdir")
       ;
 
 
@@ -67,11 +68,15 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
   return options;
 }
 
-void SetOutputDirectory(std::string outdir){
+void SetOutputDirectory(std::string outdir, bool clean){
   boost::filesystem::path p (outdir);
   // clean up old simulation files
   if (!(boost::filesystem::is_directory(p)))
     boost::filesystem::create_directories(p);
+  else if (clean) {
+    boost::filesystem::remove_all(p);
+    boost::filesystem::create_directories(p);
+  }
 }
 
 // check if path ends with / and add if missing
@@ -236,7 +241,10 @@ int main(int argc, char *argv[]) {
   if (opt.count("save") | opt.count("outdir")) { save = true; }
   if (opt.count("outdir")) {
     std::string outdir = FixPath(opt["outdir"].as<std::string>());
-    SetOutputDirectory(outdir);
+    if (opt.count("clean"))
+      SetOutputDirectory(outdir,true);
+    else
+      SetOutputDirectory(outdir,false);
     vis->impath = outdir;
   }
   if (opt.count("prefix")) { vis->prefix = opt["prefix"].as<std::string>(); }
