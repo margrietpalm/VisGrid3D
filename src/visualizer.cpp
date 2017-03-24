@@ -110,15 +110,20 @@ Visualizer::Visualizer(DataReader *_reader) {
   impath = "./";
 }
 
-void Visualizer::InitRenderer() {
+void Visualizer::InitRenderer(bool onscreen) {
   renderer = vtkSmartPointer<vtkRenderer>::New();
   renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   renderWindow->AddRenderer(renderer);
-  renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  renderWindowInteractor->SetRenderWindow(renderWindow);
-  renderWindow->SetSize(winsize[0], winsize[1]);
   renderer->SetBackground(bgcolor.r, bgcolor.g, bgcolor.b);
+  renderWindow->SetSize(winsize[0], winsize[1]);
   vtkSmartPointer<vtkCamera> cam = renderer->GetActiveCamera();
+  if (onscreen) {
+    renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    renderWindowInteractor->SetRenderWindow(renderWindow);
+  }
+  else{
+    renderWindow->SetOffScreenRendering( 1 );
+  }
 }
 
 void Visualizer::ModifyCamera() {
@@ -193,10 +198,6 @@ Visualizer::GetPointsAndColorsForTau(stepdata data, int tau, std::string color_b
   return {points, colors};
 }
 
-//vtkSmartPointer<vtkActor> Visualizer::GetActorForType(stepdata data, int tau) {
-//  return GetActorForType(data,tau,{0.5,0.5,0.5},1,"none");
-//}
-
 
 vtkSmartPointer<vtkActor>
 Visualizer::GetActorForType(stepdata data, int tau, color c, double opacity, std::string color_by, ColorMap *cm) {
@@ -253,9 +254,6 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
                                                                   bool save,
                                                                   std::vector<std::string> color_by,
                                                                   std::vector<ColorMap *> cms) {
-  std::stringstream title;
-  title << "step " << step;
-  renderWindow->SetWindowName(title.str().c_str());
   stepdata data = reader->GetDataForStep(step);
   std::vector<vtkSmartPointer<vtkActor> > actors;
   for (int i = 0; i < taulist.size(); i++) {
@@ -266,28 +264,48 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
   }
   renderer->AddActor(GetActorForBox(data));
 
-  renderWindow->Render();
+//  renderWindow->Render();
   if (show) {
+    std::stringstream title;
+    title << "step " << step;
+    renderWindow->SetWindowName(title.str().c_str());
     renderWindowInteractor->Initialize();
     renderWindowInteractor->Start();
   }
   if (save) {
     vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
     windowToImageFilter->SetInput(renderWindow);
-    windowToImageFilter->SetMagnification(1); //set the resolution of the output image (3 times the current resolution of vtk render window)
-    windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
-    windowToImageFilter->ReadFrontBufferOff(); // read from the back buffer
     windowToImageFilter->Update();
     vtkSmartPointer<vtkPNGWriter> writer =
         vtkSmartPointer<vtkPNGWriter>::New();
     writer->SetFileName(GetImNameForStep(step).c_str());
     writer->SetInputConnection(windowToImageFilter->GetOutputPort());
     writer->Write();
+    if (!show)
+      std::cout << "Create new image: " << GetImNameForStep(step).c_str() << std::endl;
   }
   return actors;
 }
 
-void Visualizer::Animate(std::vector<int> taulist,
+
+void Visualizer::AnimateOffScreen(std::vector<int> taulist,
+                         std::vector<int> steps,
+                         std::vector<int> static_tau,
+                         std::vector<color> colors,
+                         std::vector<double> opacity,
+                         std::vector<std::string> color_by,
+                         std::vector<ColorMap *> cms) {
+  std::cout << "Running visualization off screen!\n";
+  if (static_tau.size() > 0)
+    VisualizeStep(steps[0],static_tau, false, colors, opacity,false, color_by, cms);
+  std::vector<vtkSmartPointer<vtkActor> > update_actors;
+  for (auto step : steps){
+    for (auto actor : update_actors) { renderer->RemoveActor(actor); }
+    update_actors = VisualizeStep(step,taulist, false, colors, opacity, true, color_by, cms);
+  }
+}
+
+void Visualizer::AnimateOnScreen(std::vector<int> taulist,
                          std::vector<int> steps,
                          std::vector<int> static_tau,
                          std::vector<color> colors,

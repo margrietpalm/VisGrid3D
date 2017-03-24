@@ -54,6 +54,7 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("fmin","Comma-seperated list with min value for each field", cxxopts::value<std::string>())
       ("showcolors", "show available colors", cxxopts::value<bool>())
       ("l,loop","Loop visualization", cxxopts::value<bool>())
+      ("q,quiet","Hide visualization windows", cxxopts::value<bool>())
       ;
 
 
@@ -63,7 +64,6 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
     exit(0);
   }
   std::string types = options["types"].as<std::string>();
-  std::cout << types << std::endl;
   return options;
 }
 
@@ -201,7 +201,9 @@ int main(int argc, char *argv[]) {
       vis->bbcolor = ct->GetRGBDouble(v[0]);
   }
   if (opt.count("fps")) { vis->fps = opt["fps"].as<double>(); }
-  vis->InitRenderer();
+  bool onscreen = true;
+  if (opt.count("quiet")){ onscreen = false;}
+  vis->InitRenderer(onscreen);
 
 //   set up camera
   bool modcam = false;
@@ -243,12 +245,17 @@ int main(int argc, char *argv[]) {
   bool loop = false;
   if (opt.count("loop")) {loop = true;}
 
-
     // run animation
-  if (steps.size() > 1)
-    vis->Animate(types, steps, stattypes, colors, alpha, save, color_by, cms, loop);
+  if (steps.size() > 1) {
+    if (onscreen)
+      vis->AnimateOnScreen(types, steps, stattypes, colors, alpha, save, color_by, cms, loop);
+    else {
+      std::cout << "animate " << steps.size() << " steps\n";
+      vis->AnimateOffScreen(types, steps, stattypes, colors, alpha, color_by, cms);
+    }
+  }
   else
-    vis->VisualizeStep(steps[0], types, true, colors, alpha, save, color_by, cms);
+    vis->VisualizeStep(steps[0], types, onscreen, colors, alpha, save, color_by, cms);
 
 
   return EXIT_SUCCESS;
