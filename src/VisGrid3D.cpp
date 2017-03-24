@@ -74,6 +74,14 @@ void SetOutputDirectory(std::string outdir){
     boost::filesystem::create_directories(p);
 }
 
+// check if path ends with / and add if missing
+std::string FixPath(std::string path){
+  char ch = path.back();
+  if (ch!='/')
+    path = path+"/";
+  return path;
+}
+
 
 int main(int argc, char *argv[]) {
   std::vector<int> steps;
@@ -91,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   // Set up data reader
   std::string datapath;
-  if (opt.count("simdir")) { datapath = opt["simdir"].as<std::string>(); }
+  if (opt.count("simdir")) { datapath = FixPath(opt["simdir"].as<std::string>()); }
   else { datapath = "./"; }
   std::vector<std::string> color_by;
   std::vector<std::string> extra_fields;
@@ -225,8 +233,9 @@ int main(int argc, char *argv[]) {
   bool save = false;
   if (opt.count("save") | opt.count("outdir")) { save = true; }
   if (opt.count("outdir")) {
-    SetOutputDirectory(opt["outdir"].as<std::string>());
-    vis->impath = opt["outdir"].as<std::string>();
+    std::string outdir = FixPath(opt["outdir"].as<std::string>());
+    SetOutputDirectory(outdir);
+    vis->impath = outdir;
   }
   if (opt.count("prefix")) { vis->prefix = opt["prefix"].as<std::string>(); }
   if (save) { vis->numlen = (int)std::to_string(steps[steps.size() - 1]).size(); }
