@@ -24,6 +24,8 @@
 #include <vtkPointData.h>
 #include <vtkLookupTable.h>
 #include <vtkCellArray.h>
+#include <vtkPolygon.h>
+#include <vtkPoints.h>
 
 // For compatibility with new VTK generic data arrays
 #ifdef vtkGenericDataArray_h
@@ -71,6 +73,7 @@ class vtkTimerCallback: public vtkCommand {
     }
     vtkRenderWindow *win = iren->GetRenderWindow();
     vtkRenderer *ren = win->GetRenderers()->GetFirstRenderer();
+    std::map<std::string, color> planes;
     for (auto actor : update_actors) { ren->RemoveActor(actor); }
     if (used_actors.find(TimerCount) == used_actors.end()) {
       update_actors = v->VisualizeStep(steps[TimerCount],
@@ -80,7 +83,7 @@ class vtkTimerCallback: public vtkCommand {
                                        opacity,
                                        save,
                                        color_by,
-                                       cms);
+                                       cms, planes);
       if (loop)
         used_actors[steps[TimerCount]] = update_actors;
     } else {
@@ -133,6 +136,65 @@ void Visualizer::ModifyCamera() {
   cam->Pitch(campitch);
   renderer->SetActiveCamera(cam);
 }
+
+vtkSmartPointer<vtkActor> Visualizer::GetPlane(std::vector<std::vector<int>> corners, color planecolor){
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  if (corners.size() != 4){
+    return actor;
+  }
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+  for (auto pt : corners){
+    if (pt.size() != 3){ return actor;}
+    points->InsertNextPoint(pt[0],pt[1],pt[2]);
+  }
+  vtkSmartPointer<vtkPolygon> polygon = vtkSmartPointer<vtkPolygon>::New();
+  polygon->GetPointIds()->SetNumberOfIds(4);
+  polygon->GetPointIds()->SetId(0, 0);
+  polygon->GetPointIds()->SetId(1, 1);
+  polygon->GetPointIds()->SetId(2, 2);
+  polygon->GetPointIds()->SetId(3, 3);
+
+  vtkSmartPointer<vtkCellArray> polygons = vtkSmartPointer<vtkCellArray>::New();
+  polygons->InsertNextCell(polygon);
+
+  vtkSmartPointer<vtkPolyData> polygonPolyData = vtkSmartPointer<vtkPolyData>::New();
+  polygonPolyData->SetPoints(points);
+  polygonPolyData->SetPolys(polygons);
+
+  vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+  #if VTK_MAJOR_VERSION <= 5
+    mapper->SetInput(polygonPolyData);
+  #else
+    mapper->SetInputData(polygonPolyData);
+  #endif
+
+  actor->SetMapper(mapper);
+  actor->GetProperty()->SetColor(planecolor.r,planecolor.g,planecolor.g);
+  return actor;
+}
+
+std::vector< vtkSmartPointer<vtkActor> > Visualizer::GetBoundaryPlanes(stepdata data, std::map<std::string,color> planes){
+  std::vector< vtkSmartPointer<vtkActor> > actors;
+  int *dim = data.sp->GetDimensions();
+  int w = dim[0];
+  int h = dim[1];
+  int d = dim[2];
+
+  if (planes.find("xmin") != planes.end())
+    actors.push_back(GetPlane({{0,0,0},{0,h,0},{0,h,d},{0,0,d}},planes["xmin"]));
+  if (planes.find("xmax") != planes.end())
+    actors.push_back(GetPlane({{w,0,0},{w,h,0},{w,h,d},{w,0,d}},planes["xmax"]));
+  if (planes.find("ymin") != planes.end())
+    actors.push_back(GetPlane({{0,0,0},{w,0,0},{w,0,d},{0,0,d}},planes["ymin"]));
+  if (planes.find("ymax") != planes.end())
+    actors.push_back(GetPlane({{0,h,0},{w,h,0},{w,h,d},{0,h,d}},planes["ymin"]));
+  if (planes.find("zmin") != planes.end())
+    actors.push_back(GetPlane({{0,0,0},{w,0,0},{w,h,0},{0,h,0}},planes["zmin"]));
+  if (planes.find("zmax") != planes.end())
+    actors.push_back(GetPlane({{0,0,d},{w,0,d},{w,h,d},{0,h,d}},planes["zmin"]));
+  return actors;
+}
+
 
 vtkSmartPointer<vtkActor> Visualizer::GetActorForBox(stepdata data) {
   int *dim = data.sp->GetDimensions();
@@ -253,7 +315,8 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
                                                                   std::vector<double> tau_opacity,
                                                                   bool save,
                                                                   std::vector<std::string> color_by,
-                                                                  std::vector<ColorMap *> cms) {
+                                                                  std::vector<ColorMap *> cms,
+                                                                  std::map<std::string,color> planes) {
   stepdata data = reader->GetDataForStep(step);
   std::vector<vtkSmartPointer<vtkActor> > actors;
   for (int i = 0; i < taulist.size(); i++) {
@@ -263,6 +326,13 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
     actors.push_back(actor);
   }
   renderer->AddActor(GetActorForBox(data));
+  if (planes.size() > 0){
+    std::vector<vtkSmartPointer<vtkActor> > bnd_actors  = GetBoundaryPlanes(data, planes);
+    for (auto plane : bnd_actors){
+      renderer->AddActor(plane);
+      actors.push_back(plane);
+    }
+  }
 
 //  renderWindow->Render();
   if (show) {
@@ -294,14 +364,14 @@ void Visualizer::AnimateOffScreen(std::vector<int> taulist,
                          std::vector<color> colors,
                          std::vector<double> opacity,
                          std::vector<std::string> color_by,
-                         std::vector<ColorMap *> cms) {
+                         std::vector<ColorMap *> cms, std::map<std::string,color> planes) {
   std::cout << "Running visualization off screen!\n";
   if (static_tau.size() > 0)
-    VisualizeStep(steps[0],static_tau, false, colors, opacity,false, color_by, cms);
+    VisualizeStep(steps[0],static_tau, false, colors, opacity,false, color_by, cms, planes);
   std::vector<vtkSmartPointer<vtkActor> > update_actors;
   for (auto step : steps){
     for (auto actor : update_actors) { renderer->RemoveActor(actor); }
-    update_actors = VisualizeStep(step,taulist, false, colors, opacity, true, color_by, cms);
+    update_actors = VisualizeStep(step,taulist, false, colors, opacity, true, color_by, cms, planes);
   }
 }
 
@@ -312,7 +382,7 @@ void Visualizer::AnimateOnScreen(std::vector<int> taulist,
                          std::vector<double> opacity,
                          bool save,
                          std::vector<std::string> color_by,
-                         std::vector<ColorMap *> cms,bool loop) {
+                         std::vector<ColorMap *> cms,bool loop, std::map<std::string,color> planes) {
   renderWindowInteractor->Initialize();
   VisualizeStep(steps[0],
                 static_tau,
@@ -321,7 +391,7 @@ void Visualizer::AnimateOnScreen(std::vector<int> taulist,
                 opacity,
                 save,
                 color_by,
-                cms);
+                cms, planes);
   std::vector<int> update_tau;
   vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
   cb->tmax = (int) steps.size();

@@ -29,10 +29,10 @@ class Visualizer {
 
   void AnimateOnScreen(std::vector<int> taulist, std::vector<int> steps, std::vector<int> static_tau,
                  std::vector<color> colors, std::vector<double> opacity, bool save,
-                 std::vector<std::string> color_by, std::vector<ColorMap *> cms, bool loop);
+                 std::vector<std::string> color_by, std::vector<ColorMap *> cms, bool loop, std::map<std::string,color> planes);
   void AnimateOffScreen(std::vector<int> taulist, std::vector<int> steps, std::vector<int> static_tau,
                         std::vector<color> colors, std::vector<double> opacity,
-                        std::vector<std::string> color_by, std::vector<ColorMap *> cms);
+                        std::vector<std::string> color_by, std::vector<ColorMap *> cms, std::map<std::string,color> planes);
   std::vector<vtkSmartPointer<vtkActor> > VisualizeStep(int step,
                                                           std::vector<int> taulist,
                                                           bool show,
@@ -40,7 +40,8 @@ class Visualizer {
                                                           std::vector<double> tau_opacity,
                                                           bool save,
                                                           std::vector<std::string> color_by,
-                                                          std::vector<ColorMap *> cms);
+                                                          std::vector<ColorMap *> cms,
+                                                          std::map<std::string,color> planes);
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;
@@ -58,6 +59,8 @@ class Visualizer {
   vtkSmartPointer<vtkPoints> GetPointsForTau(stepdata data, int tau);
   std::pair<vtkSmartPointer<vtkPoints>, vtkSmartPointer<vtkUnsignedCharArray>>
   GetPointsAndColorsForTau(stepdata data, int tau, std::string color_by, ColorMap *cm);
+  vtkSmartPointer<vtkActor> GetPlane(std::vector<std::vector<int>> corners, color planecolor);
+  std::vector< vtkSmartPointer<vtkActor> > GetBoundaryPlanes(stepdata data, std::map<std::string,color> planes);
 
   std::string GetImNameForStep(int step);
 

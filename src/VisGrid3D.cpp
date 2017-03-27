@@ -52,6 +52,12 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("m,colormap","File with colormap to be used with the fields", cxxopts::value<std::string>())
       ("fmax","Comma-seperated list with max value for each field", cxxopts::value<std::string>())
       ("fmin","Comma-seperated list with min value for each field", cxxopts::value<std::string>())
+      ("xmin","color boundary at xmin", cxxopts::value<std::string>())
+      ("xmax","color boundary at xmax", cxxopts::value<std::string>())
+      ("ymin","color boundary at ymin", cxxopts::value<std::string>())
+      ("ymax","color boundary at ymax", cxxopts::value<std::string>())
+      ("zmin","color boundary at zmin", cxxopts::value<std::string>())
+      ("zmax","color boundary at zmax", cxxopts::value<std::string>())
       ("showcolors", "show available colors", cxxopts::value<bool>())
       ("l,loop","Loop visualization", cxxopts::value<bool>())
       ("q,quiet","Hide visualization windows", cxxopts::value<bool>())
@@ -87,6 +93,13 @@ std::string FixPath(std::string path){
   return path;
 }
 
+color GetColorFromString(std::string s, ColorTable * ct){
+  std::vector<std::string> v = SplitString(s);
+  if (v.size() == 3)
+    return {stod(v[0]), stod(v[1]), stod(v[2])};
+  else if (v.size() == 1)
+    return ct->GetRGBDouble(v[0]);
+}
 
 int main(int argc, char *argv[]) {
   std::vector<int> steps;
@@ -191,20 +204,8 @@ int main(int argc, char *argv[]) {
   Visualizer *vis = new Visualizer(dr);
   if (opt.count("width")) { vis->winsize[0] = opt["width"].as<int>(); }
   if (opt.count("height")) { vis->winsize[1] = opt["height"].as<int>(); }
-  if (opt.count("bgcolor")) {
-    std::vector<std::string> v = SplitString(opt["bgcolor"].as<std::string>());
-    if (v.size() == 3)
-      vis->bgcolor = {stod(v[0]), stod(v[1]), stod(v[2])};
-    else if (v.size() == 1)
-      vis->bgcolor = ct->GetRGBDouble(v[0]);
-  }
-  if (opt.count("bboxcolor")) {
-    std::vector<std::string> v = SplitString(opt["bboxcolor"].as<std::string>());
-    if (v.size() == 3)
-      vis->bbcolor = {stod(v[0]), stod(v[1]), stod(v[2])};
-    else if (v.size() == 1)
-      vis->bbcolor = ct->GetRGBDouble(v[0]);
-  }
+  if (opt.count("bgcolor")){ vis->bgcolor = GetColorFromString(opt["bgcolor"].as<std::string>(),ct); }
+  if (opt.count("bboxcolor")) { vis->bbcolor = GetColorFromString(opt["bboxcolor"].as<std::string>(),ct); }
   if (opt.count("fps")) { vis->fps = opt["fps"].as<double>(); }
   bool onscreen = true;
   if (opt.count("quiet")){ onscreen = false;}
@@ -250,20 +251,30 @@ int main(int argc, char *argv[]) {
   if (opt.count("prefix")) { vis->prefix = opt["prefix"].as<std::string>(); }
   if (save) { vis->numlen = (int)std::to_string(steps[steps.size() - 1]).size(); }
 
+  // set looping
   bool loop = false;
   if (opt.count("loop")) {loop = true;}
+
+  // add boundary planes
+  std::map<std::string,color> planes;
+  if (opt.count("xmin")){planes["xmin"] = GetColorFromString(opt["xmin"].as<std::string>(),ct);}
+  if (opt.count("xmax")){planes["xmax"] = GetColorFromString(opt["xmax"].as<std::string>(),ct);}
+  if (opt.count("ymin")){planes["ymin"] = GetColorFromString(opt["ymin"].as<std::string>(),ct);}
+  if (opt.count("ymax")){planes["ymax"] = GetColorFromString(opt["ymax"].as<std::string>(),ct);}
+  if (opt.count("zmin")){planes["zmin"] = GetColorFromString(opt["zmin"].as<std::string>(),ct);}
+  if (opt.count("zmax")){planes["zmax"] = GetColorFromString(opt["zmax"].as<std::string>(),ct);}
 
     // run animation
   if (steps.size() > 1) {
     if (onscreen)
-      vis->AnimateOnScreen(types, steps, stattypes, colors, alpha, save, color_by, cms, loop);
+      vis->AnimateOnScreen(types, steps, stattypes, colors, alpha, save, color_by, cms, loop, planes);
     else {
       std::cout << "animate " << steps.size() << " steps\n";
-      vis->AnimateOffScreen(types, steps, stattypes, colors, alpha, color_by, cms);
+      vis->AnimateOffScreen(types, steps, stattypes, colors, alpha, color_by, cms, planes);
     }
   }
   else
-    vis->VisualizeStep(steps[0], types, onscreen, colors, alpha, save, color_by, cms);
+    vis->VisualizeStep(steps[0], types, onscreen, colors, alpha, save, color_by, cms, planes);
 
 
   return EXIT_SUCCESS;
