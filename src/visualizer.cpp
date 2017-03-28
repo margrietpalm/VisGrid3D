@@ -108,6 +108,8 @@ Visualizer::Visualizer(DataReader *_reader) {
   winsize = {800, 800};
   fps = 1;
   campitch = 0;
+  camroll = 0;
+  camazimuth = 0;
   numlen = 6;
   prefix = "im";
   impath = "./";
@@ -134,6 +136,10 @@ void Visualizer::ModifyCamera() {
   cam->SetPosition(camposition);
   cam->SetFocalPoint(camfocus);
   cam->Pitch(campitch);
+  cam->Roll(camroll);
+  cam->Azimuth(camazimuth);
+  double d = sqrt(camposition[0]*camposition[0]+camposition[1]*camposition[1]+camposition[2]*camposition[2]);
+  cam->SetClippingRange(0,2*d);
   renderer->SetActiveCamera(cam);
 }
 

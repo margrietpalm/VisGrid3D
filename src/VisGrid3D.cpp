@@ -45,6 +45,8 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("campos", "camera position", cxxopts::value<std::string>())
       ("camfocus", "camera focus", cxxopts::value<std::string>())
       ("campitch", "camera pitch", cxxopts::value<double>())
+      ("camroll", "camera roll", cxxopts::value<double>())
+      ("camazimuth", "camera aximuth", cxxopts::value<double>())
       ("fps", "frame rate", cxxopts::value<int>())
       ("o,outdir", "Folder to write images to", cxxopts::value<std::string>())
       ("s,save", "Save images", cxxopts::value<bool>())
@@ -234,6 +236,14 @@ int main(int argc, char *argv[]) {
   if (opt.count("campitch")) {
     modcam = true;
     vis->campitch = opt["campitch"].as<double>();
+  }
+  if (opt.count("camroll")) {
+    modcam = true;
+    vis->camroll = opt["camroll"].as<double>();
+  }
+  if (opt.count("camazimuth")) {
+    modcam = true;
+    vis->camazimuth = opt["camazimuth"].as<double>();
   }
   if (modcam) { vis->ModifyCamera(); }
 

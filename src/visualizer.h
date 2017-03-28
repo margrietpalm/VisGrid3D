@@ -47,7 +47,7 @@ class Visualizer {
   double fps;
   double camposition[3];
   double camfocus[3];
-  double campitch;
+  double campitch,camazimuth,camroll;
   int numlen;
   std::string prefix;
   std::string impath;
