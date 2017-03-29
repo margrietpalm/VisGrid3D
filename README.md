@@ -45,6 +45,10 @@ has multiple values, they must be presented in a comma-separated list.
 
 ```VisGrid3D -i morpheus/3d_migration_138/ -t 0,2```
 
+- Repeat above off screen and save results:
+
+```VisGrid3D -i morpheus/3d_migration_138/ -t 0,2 -s -q```
+
 - Colors and opacity can be defined per cell type:
 
 ```VisGrid3D -i morpheus/3d_migration_138/ -t 0,2 -c red,grey -a 1,0.1```
@@ -71,33 +75,45 @@ VisGrid3D -h
 Usage:
   ./VisGrid3D [OPTION...]
 
-  -h, --help           Print help
-  -i, --simdir arg     Folder containing vtk files
-  -t, --types arg      Comma-separated list of cell types to visualize
-  -f, --fields arg     Comma-separated list of fields (stored in the vtk)
-                       used to color the cells (use none to skip a cell type)
-  -c, --colors arg     Comma-separated list of colors associated to the cell
-                       types
-  -a, --alpha arg      Comma-separated list of alpha-values associated to the
-                       cell types
-      --static arg     Comma-separated list of static cell types
-      --steps arg      Comma-separated list of time steps to visualize
-  -W, --width arg      visualization width (default: 800)
-  -H, --height arg     visualization height (default: 800)
-      --bgcolor arg    background color (default: black)
-      --bboxcolor arg  bounding box color (default: white)
-      --campos arg     camera position
-      --camfocus arg   camera focus
-      --campitch arg   camera pitch
-      --fps arg        frame rate
-  -o, --outdir arg     Folder to write images to
-  -s, --save           Save images
-      --prefix arg     Prefix for image names
-  -m, --colormap arg   File with colormap to be used with the fields
-      --frange arg     min and max value of the field
-      --fmax arg       Comma-seperated list with max value for each field
-      --fmin arg       Comma-seperated list with min value for each field
-      --showcolors     show available colors
+  -h, --help            Print help
+  -i, --simdir arg      Folder containing vtk files
+  -t, --types arg       Comma-separated list of cell types to visualize
+  -f, --fields arg      Comma-separated list of fields (stored in the vtk)
+                        used to color the cells (use none to skip a cell type)
+  -c, --colors arg      Comma-separated list of colors associated to the cell
+                        types
+  -a, --alpha arg       Comma-separated list of alpha-values associated to
+                        the cell types
+      --static arg      Comma-separated list of static cell types
+      --steps arg       Comma-separated list of time steps to visualize
+  -W, --width arg       visualization width (default: 800)
+  -H, --height arg      visualization height (default: 800)
+      --bgcolor arg     background color (default: black)
+      --bboxcolor arg   bounding box color (default: white)
+      --campos arg      camera position
+      --camfocus arg    camera focus
+      --campitch arg    camera pitch
+      --camroll arg     camera roll
+      --camazimuth arg  camera aximuth
+      --fps arg         frame rate
+  -o, --outdir arg      Folder to write images to
+  -s, --save            Save images
+      --prefix arg      Prefix for image names
+  -m, --colormap arg    File with colormap to be used with the fields
+      --fmax arg        Comma-seperated list with max value for each field
+      --fmin arg        Comma-seperated list with min value for each field
+      --xmin arg        color boundary at xmin
+      --xmax arg        color boundary at xmax
+      --ymin arg        color boundary at ymin
+      --ymax arg        color boundary at ymax
+      --zmin arg        color boundary at zmin
+      --zmax arg        color boundary at zmax
+      --showcolors      show available colors
+  -l, --loop            Loop visualization
+  -q, --quiet           Hide visualization windows
+      --clean           Remove existing content of outdir
+  -z, --gzip            Use gzipped vtk files
+
 ```
 
 
