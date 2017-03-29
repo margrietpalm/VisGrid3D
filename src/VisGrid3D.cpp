@@ -63,7 +63,8 @@ cxxopts::Options GetPars(int argc, char *argv[]) {
       ("showcolors", "show available colors", cxxopts::value<bool>())
       ("l,loop","Loop visualization", cxxopts::value<bool>())
       ("q,quiet","Hide visualization windows", cxxopts::value<bool>())
-      ("clean","Remove existing content of outdir")
+      ("clean","Remove existing content of outdir", cxxopts::value<bool>())
+      ("z,gzip","Use gzipped vtk files", cxxopts::value<bool>())
       ;
 
 
@@ -129,7 +130,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::string>::iterator it = std::unique(extra_fields.begin(), extra_fields.end());
     extra_fields.resize(std::distance(extra_fields.begin(), it));
   }
-  DataReader *dr = new DataReader("plot", datapath, extra_fields);
+  DataReader *dr = new DataReader("plot", datapath, extra_fields, opt.count("gzip") > 0);
   // select step to visualize
   if (opt.count("steps")) {
     for (auto s : SplitString(opt["steps"].as<std::string>()))
@@ -284,7 +285,7 @@ int main(int argc, char *argv[]) {
     }
   }
   else
-    vis->VisualizeStep(steps[0], types, onscreen, colors, alpha, save, color_by, cms, planes);
+    vis->VisualizeStep(steps[0], types, onscreen, colors, alpha, save, color_by, cms, planes, true);
 
 
   return EXIT_SUCCESS;

@@ -41,7 +41,7 @@ class Visualizer {
                                                           bool save,
                                                           std::vector<std::string> color_by,
                                                           std::vector<ColorMap *> cms,
-                                                          std::map<std::string,color> planes);
+                                                          std::map<std::string,color> planes, bool bbox);
   color bgcolor, bbcolor;
   std::vector<int> winsize;
   double fps;

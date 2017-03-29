@@ -83,7 +83,7 @@ class vtkTimerCallback: public vtkCommand {
                                        opacity,
                                        save,
                                        color_by,
-                                       cms, planes);
+                                       cms, planes, false);
       if (loop)
         used_actors[steps[TimerCount]] = update_actors;
     } else {
@@ -322,16 +322,11 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
                                                                   bool save,
                                                                   std::vector<std::string> color_by,
                                                                   std::vector<ColorMap *> cms,
-                                                                  std::map<std::string,color> planes) {
+                                                                  std::map<std::string,color> planes,bool bbox) {
   stepdata data = reader->GetDataForStep(step);
   std::vector<vtkSmartPointer<vtkActor> > actors;
-  for (int i = 0; i < taulist.size(); i++) {
-    vtkSmartPointer<vtkActor> actor =
-        GetActorForType(data, taulist[i], tau_colors[i], tau_opacity[i], color_by[i], cms[i]);
-    renderer->AddActor(actor);
-    actors.push_back(actor);
-  }
-  renderer->AddActor(GetActorForBox(data));
+  if (bbox)
+    renderer->AddActor(GetActorForBox(data));
   if (planes.size() > 0){
     std::vector<vtkSmartPointer<vtkActor> > bnd_actors  = GetBoundaryPlanes(data, planes);
     for (auto plane : bnd_actors){
@@ -339,6 +334,13 @@ std::vector<vtkSmartPointer<vtkActor> > Visualizer::VisualizeStep(int step,
       actors.push_back(plane);
     }
   }
+  for (int i = 0; i < taulist.size(); i++) {
+    vtkSmartPointer<vtkActor> actor =
+        GetActorForType(data, taulist[i], tau_colors[i], tau_opacity[i], color_by[i], cms[i]);
+    renderer->AddActor(actor);
+    actors.push_back(actor);
+  }
+
 
 //  renderWindow->Render();
   if (show) {
@@ -372,12 +374,12 @@ void Visualizer::AnimateOffScreen(std::vector<int> taulist,
                          std::vector<std::string> color_by,
                          std::vector<ColorMap *> cms, std::map<std::string,color> planes) {
   std::cout << "Running visualization off screen!\n";
-  if (static_tau.size() > 0)
-    VisualizeStep(steps[0],static_tau, false, colors, opacity,false, color_by, cms, planes);
+  VisualizeStep(steps[0],static_tau, false, colors, opacity,false, color_by, cms, planes, true);
   std::vector<vtkSmartPointer<vtkActor> > update_actors;
+  planes.clear();
   for (auto step : steps){
     for (auto actor : update_actors) { renderer->RemoveActor(actor); }
-    update_actors = VisualizeStep(step,taulist, false, colors, opacity, true, color_by, cms, planes);
+    update_actors = VisualizeStep(step,taulist, false, colors, opacity, true, color_by, cms, planes, false);
   }
 }
 
@@ -390,14 +392,7 @@ void Visualizer::AnimateOnScreen(std::vector<int> taulist,
                          std::vector<std::string> color_by,
                          std::vector<ColorMap *> cms,bool loop, std::map<std::string,color> planes) {
   renderWindowInteractor->Initialize();
-  VisualizeStep(steps[0],
-                static_tau,
-                false,
-                colors,
-                opacity,
-                save,
-                color_by,
-                cms, planes);
+  VisualizeStep(steps[0], static_tau, false, colors, opacity, save, color_by, cms, planes, true);
   std::vector<int> update_tau;
   vtkSmartPointer<vtkTimerCallback> cb = vtkSmartPointer<vtkTimerCallback>::New();
   cb->tmax = (int) steps.size();

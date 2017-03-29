@@ -8,6 +8,11 @@
 #include <glob.h>
 #include <algorithm>
 
+#include <fstream>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include "datareader.h"
 #include <vtkStructuredPoints.h>
 #include <vtkPointData.h>
@@ -16,22 +21,21 @@
 DataReader::DataReader() {
   basename = "plot";
   datapath = "./";
+  gzip = false;
+  suffix = ".vtk";
 }
 
-DataReader::DataReader(std::string _basename, std::string _datapath) {
-  basename = _basename;
-  datapath = _datapath;
-}
-
-DataReader::DataReader(std::string _basename, std::string _datapath, std::vector<std::string> _extra_fields) {
+DataReader::DataReader(std::string _basename, std::string _datapath, std::vector<std::string> _extra_fields, bool _gzip) {
   basename = _basename;
   datapath = _datapath;
   extra_fields = _extra_fields;
+  gzip = _gzip;
+  suffix = gzip ? ".vtk.gz" : ".vtk";
 }
 
 std::vector<int> DataReader::FindSteps() {
   glob_t globbuf;
-  int err = glob((datapath + basename + "_*" + ".vtk").c_str(), 0, NULL, &globbuf);
+  int err = glob((datapath + basename + "_*" + suffix).c_str(), 0, NULL, &globbuf);
   std::vector<int> steps;
   if (err == 0) {
     for (size_t i = 0; i < globbuf.gl_pathc; i++) {
@@ -48,7 +52,7 @@ std::string DataReader::GetFileNameForStep(int step) {
   std::stringstream num;
   num << std::setfill('0') << std::setw(6);
   num << step;
-  return datapath + basename + "_" + num.str() + ".vtk";
+  return datapath + basename + "_" + num.str() + suffix;
 }
 
 stepdata DataReader::GetDataForStep(int step) {
@@ -60,7 +64,19 @@ stepdata DataReader::GetDataForStep(int step) {
 stepdata DataReader::ReadData(int step) {
   reader = vtkSmartPointer<vtkStructuredPointsReader>::New();
   std::string fn = GetFileNameForStep(step);
-  reader->SetFileName(fn.c_str());
+  if (gzip){
+    reader->ReadFromInputStringOn();
+    std::ifstream file(fn, std::ios_base::in | std::ios_base::binary);
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+    in.push(boost::iostreams::gzip_decompressor());
+    in.push(file);
+    std::stringstream dst;
+    boost::iostreams::copy(in, dst);
+    reader->SetInputString(dst.str().c_str());
+  }
+  else {
+    reader->SetFileName(fn.c_str());
+  }
   for (int i = 0; i < reader->GetNumberOfScalarsInFile(); i++)
     fields.push_back(reader->GetScalarsNameInFile(i));
   stepdata sd;

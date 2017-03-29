@@ -17,7 +17,7 @@ find_package(VTK REQUIRED)
 find_package(ImageMagick REQUIRED)
 include(${VTK_USE_FILE})
 
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(Boost COMPONENTS filesystem iostreams REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 

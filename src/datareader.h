@@ -23,8 +23,7 @@ struct stepdata {
 class DataReader {
  public:
   DataReader();
-  DataReader(std::string _basename, std::string _datapath);
-  DataReader(std::string _basename, std::string _datapath, std::vector<std::string> _extra_fields);
+  DataReader(std::string _basename, std::string _datapath, std::vector<std::string> _extra_fields, bool _gzip);
   std::vector<int> FindSteps();
   stepdata GetDataForStep(int step);
   stepdata ReadData(int step);
@@ -37,6 +36,8 @@ class DataReader {
   std::vector<std::string> extra_fields;
   std::string basename;
   std::string datapath;
+  bool gzip;
+  std::string suffix;
 
 };
 
