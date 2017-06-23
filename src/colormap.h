@@ -53,8 +53,12 @@ public:
   };
 
   color GetColor(int val, int vmin, int vmax){
-    if (gmax == -1)
-      return colormap[(int)round(255*(val-vmin)/(vmax-vmin))];
+    if (gmax == -1) {
+      if (vmin == vmax)
+        return colormap[0];
+      else
+        return colormap[(int) round(255 * (val - vmin) / (vmax - vmin))];
+    }
     else
       return colormap[(int)round(255*(val-gmin)/(gmax-gmin))];
 
