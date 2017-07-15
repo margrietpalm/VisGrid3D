@@ -1,10 +1,10 @@
 # Visualizing 3D grid data
 
 * [Installation](#installation)
-  * [Generic instructions](#generic-instrustions)
-  * [Ubuntu 16.04](#ubuntu-16.04)
-* [Generating VTK files in Morpheus](#generate-vtk-files-in-morpheus)
-* [Usage](#usages)
+  * [Generic instructions](#generic-instructions)
+  * [Ubuntu 16.04](#ubuntu-1604)
+* [Generating VTK files in Morpheus](#generating-vtk-files-in-morpheus)
+* [Usage](#usage)
   * [Examples](#examples)
 
 
