@@ -13,7 +13,7 @@
 ### Generic instructions
 
 1. Install dependencies
-    - [boost]()
+    - [boost](http://www.boost.org/)
     - [VTK](http://www.vtk.org/)
     - [CMake 3.1 or higher](https://cmake.org/)
 2. Install using cmake:
