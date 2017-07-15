@@ -14,7 +14,6 @@ set(SOURCE_FILES
         src/colormap.h)
 
 find_package(VTK REQUIRED)
-find_package(ImageMagick REQUIRED)
 include(${VTK_USE_FILE})
 
 find_package(Boost COMPONENTS filesystem iostreams REQUIRED)
@@ -25,4 +24,3 @@ add_executable(VisGrid3D ${SOURCE_FILES})
 
 target_link_libraries(VisGrid3D ${VTK_LIBRARIES})
 target_link_libraries(VisGrid3D ${Boost_LIBRARIES} )
-
