@@ -28,7 +28,7 @@ Note, on OSX you may need to use clang++ instead of gcc (see [issue #3](https://
 
 
 ### Ubuntu 16.04
-1. Install dependencies: `sudo apt-get install cmake libvtk6-dev libboost-filesystem1.58-dev libboost-iostreams1.58-dev libproj-dev`
+1. Install dependencies: `sudo apt-get install cmake git libvtk6-dev libboost-filesystem1.58-dev libboost-iostreams1.58-dev libproj-dev`
 2. Clone repository: `git clone https://github.com/margrietpalm/VisGrid3D.git`
 3. Make build directory in the source folder, i.e.: `cd VisGrid3D && mkdir build`
 4. From the build directory, configure build with cmake, i.e.: `cd build && cmake ../`
