@@ -3,6 +3,7 @@
 * [Installation](#installation)
   * [Generic instructions](#generic-instructions)
   * [Ubuntu 16.04](#ubuntu-1604)
+  * [Docker](#docker)
 * [Generating VTK files in Morpheus](#generating-vtk-files-in-morpheus)
 * [Usage](#usage)
   * [Examples](#examples)
@@ -33,6 +34,33 @@ Note, on OSX you may need to use clang++ instead of gcc (see [issue #3](https://
 3. Make build directory in the source folder, i.e.: `cd VisGrid3D && mkdir build`
 4. From the build directory, configure build with cmake, i.e.: `cd build && cmake ../`
 5. Build VisGrid3d: `build`
+
+
+### Docker
+After cloning VisGrid3D, the Docker container can be build with the local dockerfile:
+
+```docker build -t visgrid3d .```
+
+And then VisGrid3D can be used from inside the containter:
+
+```
+xhost +local:root
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ visgrid3d ...```
+Besides running the VisGrid3D in the Docker container, this does the following:
+* Mount a local drive in the container to read from and write to the local filesystem.
+* Share the local X11 socket with the container so the VTK window works (only tested on Linux).
+
+
+Alternatively, the image from DockerHub may be used:
+
+```
+xhost +local:root
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ margrietpalm/visgrid3d ...```
+Besides running the VisGrid3D in the Docker container, this does the following:
+* Mount a local drive in the container to read from and write to the local filesystem.
+* Share the local X11 socket with the container so the VTK window works (only tested on Linux).
+
+
 
 ## Generating VTK files in Morpheus
 Morpheus can generate VTK files with the *VtkPlotter* analysis plugin. Set up this plugin to write ascii files and
