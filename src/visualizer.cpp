@@ -414,5 +414,3 @@ void Visualizer::AnimateOnScreen(std::vector<int> taulist,
 
   renderWindowInteractor->Start();
 }
-
-
