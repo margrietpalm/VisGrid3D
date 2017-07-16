@@ -37,25 +37,26 @@ Note, on OSX you may need to use clang++ instead of gcc (see [issue #3](https://
 
 
 ### Docker
-After cloning VisGrid3D, the Docker container can be build with the local dockerfile:
-
-```docker build -t visgrid3d .```
+After cloning VisGrid3D, the Docker container can be build with the local dockerfile: ```docker build -t visgrid3d . ```
 
 And then VisGrid3D can be used from inside the containter:
 
 ```
 xhost +local:root
-docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ visgrid3d ...```
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ visgrid3d ...
+```
+
 Besides running the VisGrid3D in the Docker container, this does the following:
 * Mount a local drive in the container to read from and write to the local filesystem.
 * Share the local X11 socket with the container so the VTK window works (only tested on Linux).
-
 
 Alternatively, the image from DockerHub may be used:
 
 ```
 xhost +local:root
-docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ margrietpalm/visgrid3d ...```
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v $PWD:/data/ margrietpalm/visgrid3d ...
+```
+
 Besides running the VisGrid3D in the Docker container, this does the following:
 * Mount a local drive in the container to read from and write to the local filesystem.
 * Share the local X11 socket with the container so the VTK window works (only tested on Linux).
